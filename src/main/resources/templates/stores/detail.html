@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('부미로 - ' + ${store.storeName})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: mainNav}"></nav>
+
+<div class="detail-wrap">
+    <!-- 브레드크럼 -->
+    <div class="breadcrumb">
+        <a th:href="@{/stores}">부산 맛집</a>
+        <span class="sep">›</span>
+        <span th:text="${store.storeName}">가게 이름</span>
+    </div>
+
+    <!-- 제목 + 평점 + 요약 -->
+    <div class="detail-head">
+        <div>
+            <h1 class="detail-title" th:text="${store.storeName}">가게 이름</h1>
+            <div class="detail-summary">
+                <span th:if="${!reviews.isEmpty()}" class="score-inline">
+                    <b th:text="${#numbers.formatDecimal(avgRating,1,1)}">4.9</b>
+                    <span class="stars-sm">★★★★★</span>
+                    <a href="#reviews" th:text="'(' + ${reviews.size()} + '건의 리뷰)'">(0건의 리뷰)</a>
+                </span>
+                <span class="dim-sep" th:if="${!reviews.isEmpty()}">·</span>
+                <span class="dim" th:text="${store.category}">아시아 요리</span>
+                <span class="dim-sep">·</span>
+                <span class="dim" th:text="${#strings.replace(store.region, '부산 ', '')}">수영구</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 대표 이미지 (가게 대표사진 or 플레이스홀더) -->
+    <div class="hero-img">
+        <img th:if="${store.imagePath != null}" th:src="@{${store.imagePath}}" alt="가게 사진"/>
+        <div th:unless="${store.imagePath != null}" class="hero-placeholder">🍜</div>
+    </div>
+
+    <!-- 관리자: 대표사진 등록 -->
+    <div sec:authorize="hasRole('ADMIN')" style="margin:12px 0">
+        <form th:action="@{/admin/stores/{id}/image(id=${store.storeId})}" method="post"
+              enctype="multipart/form-data" style="display:flex;gap:10px;align-items:center">
+            <span style="font-size:13px;color:var(--gray)">[관리자] 가게 대표사진:</span>
+            <input type="file" name="image" accept="image/*" required/>
+            <button type="submit" class="btn-login" style="padding:8px 16px">등록</button>
+        </form>
+    </div>
+
+    <!-- 탭 -->
+    <nav class="detail-tabs">
+        <a href="#overview" class="active">개요</a>
+        <a href="#location">위치</a>
+        <a href="#reviews">리뷰</a>
+    </nav>
+
+    <!-- 본문: 좌(정보) + 우(사이드카드) -->
+    <div class="detail-body">
+        <div class="detail-main">
+            <!-- 개요 -->
+            <section id="overview">
+                <h2 class="detail-h2">한눈에 보기</h2>
+                <div class="info-item">
+                    <span class="info-ic">📍</span>
+                    <span th:text="${store.address}">주소</span>
+                </div>
+                <div class="info-item" th:if="${store.phone != null}">
+                    <span class="info-ic">📞</span>
+                    <a th:href="'tel:' + ${store.phone}" th:text="${store.phone}">전화번호</a>
+                </div>
+                <div class="info-item">
+                    <span class="info-ic">🍴</span>
+                    <span th:text="${store.category}">카테고리</span>
+                </div>
+            </section>
+
+            <!-- 위치 (지도) -->
+            <section id="location" style="margin-top:36px">
+                <h2 class="detail-h2">위치</h2>
+                <div th:if="${store.latitude != null and kakaoJsKey != null and kakaoJsKey != '' and kakaoJsKey != 'YOUR_KAKAO_JAVASCRIPT_KEY'}">
+                    <div id="map" style="width:100%;height:320px;border-radius:12px"></div>
+                    <script th:src="'//dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoJsKey}"></script>
+                    <script th:inline="javascript">
+                        /*<![CDATA[*/
+                        var lat = [[${store.latitude}]], lng = [[${store.longitude}]];
+                        var name = [[${store.storeName}]];
+                        kakao.maps.load(function () {
+                            var container = document.getElementById('map');
+                            var options = { center: new kakao.maps.LatLng(lat, lng), level: 3 };
+                            var map = new kakao.maps.Map(container, options);
+                            var marker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(lat, lng) });
+                            marker.setMap(map);
+                            var iw = new kakao.maps.InfoWindow({
+                                content: '<div style="padding:6px 10px;font-size:13px">' + name + '</div>'
+                            });
+                            iw.open(map, marker);
+                        });
+                        /*]]>*/
+                    </script>
+                </div>
+                <div th:unless="${store.latitude != null and kakaoJsKey != null and kakaoJsKey != '' and kakaoJsKey != 'YOUR_KAKAO_JAVASCRIPT_KEY'}"
+                     class="map-placeholder">
+                    <span th:text="${store.address}">주소</span>
+                    <p class="dim" style="margin-top:8px;font-size:13px">지도를 보려면 카카오 JavaScript 키가 필요합니다.</p>
+                </div>
+            </section>
+
+            <!-- 리뷰 -->
+            <section id="reviews" style="margin-top:36px">
+                <div class="reviews-head">
+                    <h2 class="detail-h2" style="margin:0">
+                        리뷰 <span th:text="${reviews.size()}">0</span>건
+                    </h2>
+                </div>
+
+                <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+                <div th:if="${reviews.isEmpty()}" class="empty" style="padding:40px 20px">
+                    <p>아직 리뷰가 없어요. 첫 리뷰의 주인공이 되어보세요!</p>
+                </div>
+                <div th:if="${!reviews.isEmpty()}">
+                    <article class="review-item" th:each="rv : ${reviews}">
+                        <div class="review-item-head">
+                            <span class="rating-num" th:text="${rv.rating} + '.0'">5.0</span>
+                            <span class="stars-sm" th:text="${'★'.repeat(rv.rating)}">★★★★★</span>
+                            <span class="dim" style="font-size:13px"
+                                  th:text="'· ' + ${rv.writerNickname} + ' · ' + ${#temporals.format(rv.createdAt, 'yyyy-MM-dd')}">작성자 · 날짜</span>
+                            <!-- 관리자만: 부적절 리뷰 삭제 -->
+                            <form sec:authorize="hasRole('ADMIN')"
+                                  th:action="@{/admin/reviews/{id}/delete(id=${rv.reviewId})}" method="post"
+                                  style="margin-left:auto"
+                                  onsubmit="return confirm('이 리뷰를 삭제할까요? (관리자)');">
+                                <input type="hidden" name="storeId" th:value="${store.storeId}"/>
+                                <button type="submit" class="btn-del">삭제</button>
+                            </form>
+                        </div>
+                        <div style="font-weight:700;margin:6px 0 4px" th:text="${rv.title}">제목</div>
+                        <div th:text="${rv.content}" style="line-height:1.7">내용</div>
+                        <img th:if="${rv.imagePath != null}" th:src="@{${rv.imagePath}}"
+                             alt="리뷰 사진" style="max-width:280px;border-radius:8px;margin-top:12px"/>
+                    </article>
+                </div>
+            </section>
+        </div>
+
+        <!-- 오른쪽 사이드 -->
+        <aside class="detail-side">
+            <!-- 방문 인증 / 리뷰 쓰기 카드 -->
+            <div class="side-card">
+                <h3 class="side-title">리뷰 남기기</h3>
+                <div sec:authorize="!isAuthenticated()">
+                    <p class="dim" style="font-size:14px;margin-bottom:14px">리뷰를 쓰려면 로그인이 필요해요.</p>
+                    <a th:href="@{/login}"><button class="btn-outline-full">로그인</button></a>
+                </div>
+                <div sec:authorize="isAuthenticated()" th:if="${!visited}">
+                    <p class="dim" style="font-size:14px;margin-bottom:14px">
+                        방문 인증을 하면 리뷰를 쓸 수 있어요.<br>리뷰 작성 시 <b th:text="${rewardPoint} + 'P'">100P</b> 적립!
+                    </p>
+                    <form th:action="@{/stores/{id}/visit(id=${store.storeId})}" method="post">
+                        <button type="submit" class="btn-fill-full">방문 인증하기</button>
+                    </form>
+                </div>
+                <div sec:authorize="isAuthenticated()" th:if="${visited}">
+                    <p style="color:var(--green-dark);font-weight:700;font-size:14px;margin-bottom:12px">✓ 방문 인증 완료</p>
+                    <form th:action="@{/stores/{id}/reviews(id=${store.storeId})}" method="post"
+                          enctype="multipart/form-data">
+                        <div class="field">
+                            <select name="rating" required>
+                                <option value="5">★★★★★ (5점)</option>
+                                <option value="4">★★★★ (4점)</option>
+                                <option value="3">★★★ (3점)</option>
+                                <option value="2">★★ (2점)</option>
+                                <option value="1">★ (1점)</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <input type="text" name="title" placeholder="한 줄 요약" required/>
+                        </div>
+                        <div class="field">
+                            <textarea name="content" placeholder="맛, 분위기는 어땠나요?" required style="min-height:90px"></textarea>
+                        </div>
+                        <div class="field">
+                            <input type="file" name="image" accept="image/*"/>
+                        </div>
+                        <button type="submit" class="btn-fill-full">리뷰 등록</button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+</body>
+</html>

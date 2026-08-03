@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: matjib-review
+  servlet:
+    multipart:
+      max-file-size: 5MB          # 리뷰 사진 업로드 최대 크기
+      max-request-size: 5MB
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/matjib?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1234   # 본인 환경에 맞게 변경
+  sql:
+    init:
+      mode: always        # 앱 시작 시 schema.sql 자동 실행 (개발용)
+      # 운영에서는 never 로 두고 직접 스키마 관리 권장
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.matjib.dto,com.example.matjib.domain
+  configuration:
+    map-underscore-to-camel-case: true   # store_name -> storeName 자동 매핑
+
+# 카카오 로컬 API (부산 가게 데이터 시딩용)
+kakao:
+  api-key: REDACTED_KAKAO_API_KEY   # ← 카카오 디벨로퍼스 REST API 키로 교체
+  seed-enabled: true                  # 앱 시작 시 부산 가게 데이터 수집 (한 번 채워지면 false 로 꺼도 됨)
+  js-key: REDACTED_KAKAO_JS_KEY   # ← 지도 표시용 JavaScript 키 (없으면 지도 대신 안내 문구)
+
+# 파일 업로드 (리뷰 사진 로컬 저장)
+file:
+  upload-dir: ./uploads       # 프로젝트 루트의 uploads 폴더에 저장
+
+# Swagger
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.example.matjib: debug        # SQL/서비스 로그 확인용
+    org.mybatis: debug

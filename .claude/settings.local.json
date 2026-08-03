@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Test-NetConnection -ComputerName localhost -Port 3306 -InformationLevel Quiet\" 2>&1)",
+      "Bash(./gradlew bootRun --console=plain)",
+      "Bash(echo \"started with pid $!\")",
+      "Read(//tmp/**)",
+      "Bash(break)",
+      "Bash(curl -s http://localhost:8080/login)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

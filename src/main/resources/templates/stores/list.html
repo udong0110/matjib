@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('부미로 - 부산 맛집')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: mainNav}"></nav>
+
+<div class="container">
+    <div class="breadcrumb">홈 › 부산 › 맛집</div>
+    <h1 class="page-title">부산 맛집</h1>
+    <p class="page-subtitle">부산의 찐 로컬 맛집 <span th:text="${page.totalCount}">0</span>곳</p>
+
+    <div class="layout">
+        <!-- 왼쪽 필터 -->
+        <aside class="filters">
+            <h3>지역</h3>
+            <div class="filter-links">
+                <a th:href="@{/stores(keyword=${search.keyword},category=${search.category})}"
+                   th:classappend="${search.region == null} ? 'on'">전체</a>
+                <a th:each="rg : ${regions}"
+                   th:href="@{/stores(keyword=${search.keyword},category=${search.category},region=${rg})}"
+                   th:text="${#strings.replace(rg, '부산 ', '')}"
+                   th:classappend="${search.region == rg} ? 'on'">해운대구</a>
+            </div>
+
+            <h3 style="margin-top:28px">종류</h3>
+            <div class="filter-links">
+                <a th:href="@{/stores(keyword=${search.keyword},region=${search.region})}"
+                   th:classappend="${search.category == null} ? 'on'">전체</a>
+                <a th:each="cat : ${categories}"
+                   th:href="@{/stores(keyword=${search.keyword},region=${search.region},category=${cat})}"
+                   th:text="${cat}"
+                   th:classappend="${search.category == cat} ? 'on'">한식</a>
+            </div>
+        </aside>
+
+        <!-- 오른쪽 가게 목록 -->
+        <main>
+            <div class="result-head">
+                <span class="result-count" th:text="${page.totalCount} + '개의 맛집'">0개의 맛집</span>
+            </div>
+
+            <div th:if="${!page.content.isEmpty()}">
+                <article class="review-card" th:each="st, stat : ${page.content}">
+                    <div class="thumb" th:if="${st.imagePath == null}">🍜</div>
+                    <img class="thumb" th:if="${st.imagePath != null}" th:src="@{${st.imagePath}}"
+                         alt="가게 사진" style="object-fit:cover"/>
+                    <div class="body">
+                        <div class="rank">
+                            <span th:text="${(page.page-1)*page.size + stat.count}">1</span>.
+                            <a th:href="@{/stores/{id}(id=${st.storeId})}" th:text="${st.storeName}">가게 이름</a>
+                        </div>
+                        <div class="rating-row" th:if="${st.reviewCount > 0}">
+                            <span class="rating-num" th:text="${st.avgRating}">4.5</span>
+                            <span class="stars" th:text="${'★'.repeat(T(java.lang.Math).round(st.avgRating))}">★★★★★</span>
+                            <span style="color:var(--gray);font-size:13px"
+                                  th:text="'리뷰 ' + ${st.reviewCount} + '개'">리뷰 0개</span>
+                        </div>
+                        <div class="meta">
+                            <span class="info-line">
+                                <span th:text="${st.category}">한식</span>
+                                <span class="sep">·</span>
+                                <span th:text="${#strings.replace(st.region, '부산 ', '')}">해운대구</span>
+                            </span>
+                        </div>
+                        <div th:if="${st.oneLiner != null}" class="one-liner"
+                             th:text="'&quot;' + ${st.oneLiner} + '&quot;'">"한줄소개"</div>
+                        <div th:if="${st.oneLiner == null}" style="color:var(--gray);font-size:13px"
+                             th:text="${st.address}">주소</div>
+                    </div>
+                </article>
+            </div>
+
+            <div th:if="${page.content.isEmpty()}" class="empty">
+                <div class="big">🔍</div>
+                <p>검색 결과가 없어요.</p>
+                <p>다른 지역이나 검색어로 찾아보세요.</p>
+            </div>
+
+            <!-- 페이징 -->
+            <div class="pagination" th:if="${page.totalPages > 0}">
+                <a th:href="@{/stores(keyword=${search.keyword},region=${search.region},category=${search.category},page=${page.page - 1})}"
+                   th:classappend="${page.page <= 1} ? 'disabled'">‹</a>
+                <a th:each="p : ${#numbers.sequence(1, page.totalPages)}"
+                   th:href="@{/stores(keyword=${search.keyword},region=${search.region},category=${search.category},page=${p})}"
+                   th:text="${p}"
+                   th:classappend="${p == page.page} ? 'active'"
+                   th:if="${p >= page.page - 3 and p <= page.page + 3}">1</a>
+                <a th:href="@{/stores(keyword=${search.keyword},region=${search.region},category=${search.category},page=${page.page + 1})}"
+                   th:classappend="${page.page >= page.totalPages} ? 'disabled'">›</a>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

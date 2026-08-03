@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('부미로 - 회원가입')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: mainNav}"></nav>
+
+<div class="form-wrap">
+    <h2>회원가입</h2>
+    <p class="sub">리뷰 쓰고 포인트 모아 환급받으세요.</p>
+
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <form th:action="@{/signup}" method="post">
+        <div class="field">
+            <label>아이디</label>
+            <input type="text" name="username" placeholder="4~20자" required autofocus/>
+        </div>
+        <div class="field">
+            <label>비밀번호</label>
+            <input type="password" name="password" placeholder="4~20자" required/>
+        </div>
+        <div class="field">
+            <label>닉네임</label>
+            <input type="text" name="nickname" placeholder="리뷰에 표시될 이름" required/>
+        </div>
+        <button type="submit" class="btn-primary">가입하기</button>
+    </form>
+    <div class="form-foot">
+        이미 회원이신가요? <a th:href="@{/login}">로그인</a>
+    </div>
+</div>
+</body>
+</html>

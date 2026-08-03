@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('부미로 - 부산 맛집')}"></head>
+<body>
+<!-- 상단: 로그인/회원가입만 -->
+<nav th:replace="~{fragments/layout :: navSimple}"></nav>
+
+<!-- ===== 히어로 : 로고 + 카피 + 검색창 ===== -->
+<section class="hero">
+    <svg class="hero-waves" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,70 C240,110 480,30 720,60 C960,90 1200,40 1440,70" fill="none" stroke="currentColor" stroke-width="1"/>
+        <path d="M0,88 C260,120 500,50 740,80 C980,108 1220,58 1440,86" fill="none" stroke="currentColor" stroke-width="1"/>
+        <path d="M0,52 C220,86 470,16 700,44 C940,72 1210,26 1440,52" fill="none" stroke="currentColor" stroke-width="1"/>
+    </svg>
+
+    <div class="hero-inner">
+        <h1 class="brand">부미로</h1>
+        <p class="brand-sub">釜味路 · 부산의 맛을 찾아가는 길</p>
+        <p class="hero-copy">부산을 맛보러 떠나볼까요?</p>
+
+        <form class="hero-search" th:action="@{/stores}" method="get" autocomplete="off">
+            <input type="text" name="keyword" placeholder="가게 이름, 지역, 메뉴로 검색"/>
+            <button type="submit">검색</button>
+        </form>
+    </div>
+</section>
+
+<!-- ===== 식당 리스트 : 썸네일 카드 + 숫자 페이징 ===== -->
+<section class="wrap section">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">부산 맛집</h2>
+            <p class="section-sub" th:text="'총 ' + ${page.totalCount} + '곳'">총 0곳</p>
+        </div>
+        <a class="link-more" th:href="@{/stores}">전체 보기</a>
+    </div>
+
+    <div class="card-grid" th:if="${!page.content.isEmpty()}">
+        <a class="fcard" th:each="st : ${page.content}" th:href="@{/stores/{id}(id=${st.storeId})}">
+            <div class="fcard-thumb">
+                <img th:if="${st.imagePath != null}" th:src="@{${st.imagePath}}" th:alt="${st.storeName}"/>
+                <span class="fcard-noimg" th:if="${st.imagePath == null}">이미지 준비 중</span>
+            </div>
+            <div class="fcard-body">
+                <div class="fcard-name" th:text="${st.storeName}">가게 이름</div>
+                <div class="fcard-cat">
+                    <span th:text="${#strings.replace(st.region, '부산 ', '')}">해운대구</span>
+                    <span class="mid">·</span>
+                    <span th:text="${st.category}">돼지국밥</span>
+                </div>
+                <div class="fcard-addr" th:text="${st.address}">주소</div>
+                <div class="fcard-score">
+                    <th:block th:if="${st.reviewCount > 0}">
+                        <span class="sc-star">★</span>
+                        <span class="sc-num" th:text="${st.avgRating}">4.6</span>
+                        <span class="sc-cnt" th:text="'리뷰 ' + ${st.reviewCount}">리뷰 12</span>
+                    </th:block>
+                    <span class="sc-none" th:if="${st.reviewCount == 0}">리뷰 없음</span>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- 숫자 페이징 -->
+    <nav class="pager" th:if="${page.totalPages > 1}">
+        <a th:href="@{/(region=${selectedRegion},page=${page.page - 1})}"
+           th:classappend="${page.page <= 1} ? 'off'">‹</a>
+        <a th:each="p : ${#numbers.sequence(1, page.totalPages)}"
+           th:if="${p >= page.page - 2 and p <= page.page + 2}"
+           th:href="@{/(region=${selectedRegion},page=${p})}"
+           th:text="${p}"
+           th:classappend="${p == page.page} ? 'on'">1</a>
+        <a th:href="@{/(region=${selectedRegion},page=${page.page + 1})}"
+           th:classappend="${page.page >= page.totalPages} ? 'off'">›</a>
+    </nav>
+</section>
+
+<!-- ===== 지역 선택 + 인기 BEST ===== -->
+<section class="wrap section">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">지역별 인기 BEST</h2>
+            <p class="section-sub">지역을 선택하면 BEST 맛집과 하루 코스를 보여드려요</p>
+        </div>
+    </div>
+
+    <nav class="region-nav">
+        <a th:each="rg : ${courseRegions}"
+           th:href="@{/(region=${rg})}"
+           th:text="${#strings.replace(rg, '부산 ', '')}"
+           th:classappend="${rg == selectedRegion} ? 'on'">해운대구</a>
+    </nav>
+
+    <ol class="mini-cards" th:if="${best != null and !best.isEmpty()}">
+        <li th:each="st, stat : ${best}">
+            <a class="mcard" th:href="@{/stores/{id}(id=${st.storeId})}">
+                <div class="mcard-thumb">
+                    <span class="mcard-badge" th:text="'BEST ' + ${stat.count}">BEST 1</span>
+                    <img th:if="${st.imagePath != null}" th:src="@{${st.imagePath}}" th:alt="${st.storeName}"/>
+                    <span class="mcard-noimg" th:if="${st.imagePath == null}">이미지 준비 중</span>
+                </div>
+                <div class="mcard-body">
+                    <div class="mcard-name" th:text="${st.storeName}">가게 이름</div>
+                    <div class="mcard-cat">
+                        <span th:text="${st.category}">한식</span>
+                        <span class="mid">·</span>
+                        <span th:text="${#strings.replace(st.region, '부산 ', '')}">해운대구</span>
+                    </div>
+                    <div class="mcard-score">
+                        <th:block th:if="${st.reviewCount > 0}">
+                            <span class="sc-star">★</span>
+                            <span class="sc-num" th:text="${st.avgRating}">4.6</span>
+                            <span class="sc-cnt" th:text="'리뷰 ' + ${st.reviewCount}">리뷰 12</span>
+                        </th:block>
+                        <span class="sc-none" th:if="${st.reviewCount == 0}">리뷰 없음</span>
+                    </div>
+                </div>
+            </a>
+        </li>
+    </ol>
+    <p class="empty-line" th:if="${best == null or best.isEmpty()}">이 지역에는 아직 등록된 맛집이 없어요.</p>
+</section>
+
+<!-- ===== 코스 추천 : 세로 타임라인 ===== -->
+<section class="wrap section">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">하루 코스 추천</h2>
+            <p class="section-sub"
+               th:text="${selectedRegion != null} ? ${#strings.replace(selectedRegion,'부산 ','')} + '에서 아침부터 저녁까지' : '지역을 선택해 주세요'">
+                해운대구에서 아침부터 저녁까지
+            </p>
+        </div>
+    </div>
+
+    <ol class="course-cards" th:if="${course != null and !course.isEmpty()}">
+        <li class="cc-item" th:each="stop, stat : ${course}">
+            <div class="cc-rail">
+                <span class="cc-slot-label" th:text="${stop.slot}">아침</span>
+                <span class="cc-dot"></span>
+            </div>
+            <a class="ccard" th:href="@{/stores/{id}(id=${stop.store.storeId})}">
+                <div class="ccard-thumb">
+                    <img th:if="${stop.store.imagePath != null}" th:src="@{${stop.store.imagePath}}" th:alt="${stop.store.storeName}"/>
+                    <span class="ccard-noimg" th:if="${stop.store.imagePath == null}">이미지 준비 중</span>
+                </div>
+                <div class="ccard-body">
+                    <div class="ccard-top">
+                        <span class="ccard-slot" th:text="${stop.emoji} + ' ' + ${stop.slot}">🌅 아침</span>
+                        <span class="ccard-dist" th:if="${stop.distanceLabel != null}" th:text="${stop.distanceLabel}">+1.2km</span>
+                    </div>
+                    <div class="ccard-name" th:text="${stop.store.storeName}">가게 이름</div>
+                    <div class="ccard-cat">
+                        <span th:text="${stop.store.category}">한식</span>
+                        <span class="mid">·</span>
+                        <span th:text="${#strings.replace(stop.store.region, '부산 ', '')}">해운대구</span>
+                    </div>
+                    <div class="ccard-score">
+                        <th:block th:if="${stop.store.reviewCount > 0}">
+                            <span class="sc-star">★</span>
+                            <span class="sc-num" th:text="${stop.store.avgRating}">4.6</span>
+                            <span class="sc-cnt" th:text="'리뷰 ' + ${stop.store.reviewCount}">리뷰 12</span>
+                        </th:block>
+                        <span class="sc-none" th:if="${stop.store.reviewCount == 0}">리뷰 없음</span>
+                    </div>
+                </div>
+            </a>
+        </li>
+    </ol>
+    <p class="empty-line" th:if="${course == null or course.isEmpty()}">
+        이 지역은 아직 코스를 구성할 가게가 부족해요.
+    </p>
+</section>
+
+<footer class="foot">부미로 釜味路 · 부산의 맛을 찾아가는 길</footer>
+</body>
+</html>

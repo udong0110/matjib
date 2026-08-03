@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.matjib.mapper.MemberMapper">
+
+    <select id="findByUsername" resultType="com.example.matjib.domain.Member">
+        SELECT member_id, username, password, nickname, role, point, created_at
+        FROM member
+        WHERE username = #{username}
+    </select>
+
+    <select id="findById" resultType="com.example.matjib.domain.Member">
+        SELECT member_id, username, password, nickname, role, point, created_at
+        FROM member
+        WHERE member_id = #{memberId}
+    </select>
+
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(*) FROM member WHERE username = #{username}
+    </select>
+
+    <insert id="insert" parameterType="com.example.matjib.domain.Member"
+            useGeneratedKeys="true" keyProperty="memberId">
+        INSERT INTO member (username, password, nickname, role)
+        VALUES (#{username}, #{password}, #{nickname}, #{role})
+    </insert>
+
+    <update id="addPoint">
+        UPDATE member SET point = point + #{amount} WHERE member_id = #{memberId}
+    </update>
+
+</mapper>

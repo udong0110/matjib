@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.matjib.mapper.StoreMapper">
+
+    <select id="findAll" resultType="com.example.matjib.domain.Store">
+        SELECT store_id, store_name, category, region, address, phone, latitude, longitude, image_path, created_at
+        FROM store
+        ORDER BY store_id
+    </select>
+
+    <select id="findById" resultType="com.example.matjib.domain.Store">
+        SELECT store_id, store_name, category, region, address, phone, latitude, longitude, image_path, created_at
+        FROM store
+        WHERE store_id = #{storeId}
+    </select>
+
+    <select id="countByNameAndAddress" resultType="int"
+            parameterType="com.example.matjib.domain.Store">
+        SELECT COUNT(*) FROM store
+        WHERE store_name = #{storeName} AND address = #{address}
+    </select>
+
+    <insert id="insert" parameterType="com.example.matjib.domain.Store"
+            useGeneratedKeys="true" keyProperty="storeId">
+        INSERT INTO store (store_name, category, region, address, phone, latitude, longitude)
+        VALUES (#{storeName}, #{category}, #{region}, #{address}, #{phone}, #{latitude}, #{longitude})
+    </insert>
+
+    <!-- 검색 조건 (동적쿼리) -->
+    <sql id="storeCondition">
+        <where>
+            AND s.region LIKE '부산%'   <!-- 부산 지역만 -->
+            <if test="keyword != null and keyword != ''">
+                AND s.store_name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="region != null and region != ''">
+                AND s.region = #{region}
+            </if>
+            <if test="category != null and category != ''">
+                AND s.category = #{category}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 가게 목록: store LEFT JOIN review (리뷰 수 + 평균 별점) + 동적조건 + 페이징 -->
+    <select id="findStores" parameterType="com.example.matjib.dto.StoreSearch"
+            resultType="com.example.matjib.dto.StoreListItem">
+        SELECT s.store_id, s.store_name, s.category, s.region, s.address, s.image_path,
+               ROUND(AVG(r.rating), 1) AS avg_rating,
+               COUNT(r.review_id)      AS review_count,
+               (SELECT r2.title FROM review r2 WHERE r2.store_id = s.store_id
+                ORDER BY r2.created_at DESC LIMIT 1) AS one_liner
+        FROM store s
+        LEFT JOIN review r ON s.store_id = r.store_id
+        <include refid="storeCondition"/>
+        GROUP BY s.store_id, s.store_name, s.category, s.region, s.address, s.image_path
+        ORDER BY review_count DESC, s.store_id
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <update id="updateImage">
+        UPDATE store SET image_path = #{imagePath} WHERE store_id = #{storeId}
+    </update>
+
+    <!--
+      코스 가게 1곳 선정 (지역 + 카테고리 조건).
+      정렬: ① 리뷰 10개 이상 & 별점 높은 순 → ② 리뷰 많은 순 → ③ 프랜차이즈 아닌 로컬 우선
+      categories: 콤마 없이 리스트로 받아 IN 절 생성. excludeStoreIds: 이미 코스에 뽑힌 가게 제외.
+    -->
+    <select id="findCourseStore" resultType="com.example.matjib.dto.StoreListItem">
+        SELECT s.store_id, s.store_name, s.category, s.region, s.address, s.image_path,
+               s.latitude, s.longitude,
+               ROUND(AVG(r.rating), 1) AS avg_rating,
+               COUNT(r.review_id)      AS review_count,
+               (SELECT r2.title FROM review r2 WHERE r2.store_id = s.store_id
+                ORDER BY r2.created_at DESC LIMIT 1) AS one_liner
+        FROM store s
+        LEFT JOIN review r ON s.store_id = r.store_id
+        WHERE s.region = #{region}
+        <if test="categories != null and categories.size() > 0">
+            AND s.category IN
+            <foreach collection="categories" item="cat" open="(" separator="," close=")">
+                #{cat}
+            </foreach>
+        </if>
+        <if test="excludeStoreIds != null and excludeStoreIds.size() > 0">
+            AND s.store_id NOT IN
+            <foreach collection="excludeStoreIds" item="ex" open="(" separator="," close=")">
+                #{ex}
+            </foreach>
+        </if>
+        GROUP BY s.store_id, s.store_name, s.category, s.region, s.address, s.image_path,
+                 s.latitude, s.longitude
+        ORDER BY
+            -- ① 리뷰 10개 이상이면 별점 높은 순 우선
+            CASE WHEN COUNT(r.review_id) >= 10 THEN 0 ELSE 1 END,
+            CASE WHEN COUNT(r.review_id) >= 10 THEN AVG(r.rating) ELSE NULL END DESC,
+            -- ② 리뷰 많은 순
+            COUNT(r.review_id) DESC,
+            -- ③ 프랜차이즈(체인 추정) 뒤로 → 로컬 우선
+            CASE WHEN s.store_name REGEXP #{franchisePattern} THEN 1 ELSE 0 END,
+            s.store_id
+        LIMIT 1
+    </select>
+
+    <!-- 코스가 가능한 지역 목록 (부산 지역만) -->
+    <select id="findCourseRegions" resultType="string">
+        SELECT DISTINCT region FROM store WHERE region LIKE '부산%' ORDER BY region
+    </select>
+
+    <select id="countStores" parameterType="com.example.matjib.dto.StoreSearch"
+            resultType="long">
+        SELECT COUNT(*)
+        FROM store s
+        <include refid="storeCondition"/>
+    </select>
+
+</mapper>

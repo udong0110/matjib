@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.matjib.mapper.ReviewMapper">
+
+    <!-- 검색 조건 재사용 (동적쿼리) -->
+    <sql id="searchCondition">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (r.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR r.content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="category != null and category != ''">
+                AND s.category = #{category}
+            </if>
+            <if test="region != null and region != ''">
+                AND s.region = #{region}
+            </if>
+            <if test="minRating != null">
+                AND r.rating &gt;= #{minRating}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 목록: review + member + store 3테이블 JOIN + 동적조건 + 페이징 -->
+    <select id="findReviews" parameterType="com.example.matjib.dto.ReviewSearch"
+            resultType="com.example.matjib.dto.ReviewResponse">
+        SELECT r.review_id, r.title, r.content, r.rating, r.image_path, r.created_at,
+               m.member_id, m.nickname AS writer_nickname,
+               s.store_id, s.store_name, s.category, s.region
+        FROM review r
+        JOIN member m ON r.member_id = m.member_id
+        JOIN store  s ON r.store_id  = s.store_id
+        <include refid="searchCondition"/>
+        ORDER BY r.created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 페이징 total count: 같은 동적조건 재사용 -->
+    <select id="countReviews" parameterType="com.example.matjib.dto.ReviewSearch"
+            resultType="long">
+        SELECT COUNT(*)
+        FROM review r
+        JOIN member m ON r.member_id = m.member_id
+        JOIN store  s ON r.store_id  = s.store_id
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 상세 조회 (조인) -->
+    <select id="findById" resultType="com.example.matjib.dto.ReviewResponse">
+        SELECT r.review_id, r.title, r.content, r.rating, r.image_path, r.created_at,
+               m.member_id, m.nickname AS writer_nickname,
+               s.store_id, s.store_name, s.category, s.region
+        FROM review r
+        JOIN member m ON r.member_id = m.member_id
+        JOIN store  s ON r.store_id  = s.store_id
+        WHERE r.review_id = #{reviewId}
+    </select>
+
+    <!-- 가게별 리뷰 목록 (가게 상세 페이지용) -->
+    <select id="findByStoreId" resultType="com.example.matjib.dto.ReviewResponse">
+        SELECT r.review_id, r.title, r.content, r.rating, r.image_path, r.created_at,
+               m.member_id, m.nickname AS writer_nickname,
+               s.store_id, s.store_name, s.category, s.region
+        FROM review r
+        JOIN member m ON r.member_id = m.member_id
+        JOIN store  s ON r.store_id  = s.store_id
+        WHERE r.store_id = #{storeId}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 작성자 검증용 순수 엔티티 -->
+    <select id="findEntityById" resultType="com.example.matjib.domain.Review">
+        SELECT review_id, member_id, store_id, title, content, rating,
+               created_at, updated_at
+        FROM review
+        WHERE review_id = #{reviewId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.matjib.domain.Review"
+            useGeneratedKeys="true" keyProperty="reviewId">
+        INSERT INTO review (member_id, store_id, title, content, rating, image_path)
+        VALUES (#{memberId}, #{storeId}, #{title}, #{content}, #{rating}, #{imagePath})
+    </insert>
+
+    <update id="update" parameterType="com.example.matjib.domain.Review">
+        UPDATE review
+        SET title = #{title}, content = #{content}, rating = #{rating},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE review_id = #{reviewId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM review WHERE review_id = #{reviewId}
+    </delete>
+
+    <select id="countByMemberId" resultType="int">
+        SELECT COUNT(*) FROM review WHERE member_id = #{memberId}
+    </select>
+
+</mapper>

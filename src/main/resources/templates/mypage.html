@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('부미로 - 마이페이지')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: mainNav}"></nav>
+
+<div class="container" style="max-width:760px">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- 포인트 카드 -->
+    <div class="mypage-hero">
+        <div class="greeting">안녕하세요,</div>
+        <div class="name" th:text="${member.nickname} + '님'">홍길동님</div>
+
+        <div class="point-display">
+            <span class="num" th:text="${#numbers.formatInteger(point, 0, 'COMMA')}">0</span>
+            <span class="unit">P 보유 중</span>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" th:style="'width:' + ${progress} + '%'"></div>
+        </div>
+        <div class="progress-label">
+            <span th:if="${canRefund}">🎉 환급 가능! <b th:text="${refundUnit} + '원'">3000원</b>을 받을 수 있어요.</span>
+            <span th:unless="${canRefund}">
+                환급까지 <b th:text="${refundUnit - point} + 'P'">3000P</b> 남았어요.
+                (<span th:text="${refundUnit}">3000</span>P = <span th:text="${refundUnit}">3000</span>원)
+            </span>
+        </div>
+
+        <form th:action="@{/mypage/refund}" method="post">
+            <button type="submit" class="btn-refund" th:disabled="${!canRefund}"
+                    th:text="${refundUnit} + '원 환급 신청'">3000원 환급 신청</button>
+        </form>
+    </div>
+
+    <!-- 포인트 내역 -->
+    <h2 class="section-title">포인트 내역</h2>
+    <table class="history-table" th:if="${!history.isEmpty()}">
+        <thead>
+            <tr><th>날짜</th><th>내용</th><th style="text-align:right">포인트</th></tr>
+        </thead>
+        <tbody>
+            <tr th:each="h : ${history}">
+                <td th:text="${#temporals.format(h.createdAt, 'yyyy-MM-dd HH:mm')}">2026-08-03</td>
+                <td th:text="${h.reason}">리뷰 작성</td>
+                <td style="text-align:right"
+                    th:classappend="${h.amount > 0} ? 'amount-plus' : 'amount-minus'"
+                    th:text="${(h.amount > 0 ? '+' : '') + #numbers.formatInteger(h.amount, 0, 'COMMA')} + 'P'">+100P</td>
+            </tr>
+        </tbody>
+    </table>
+    <div th:if="${history.isEmpty()}" class="empty">
+        <p>아직 포인트 내역이 없어요.</p>
+        <p><a th:href="@{/stores}" style="color:var(--green-dark);font-weight:700">맛집을 방문 인증하고 리뷰를 써보세요!</a></p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.matjib.mapper.PointHistoryMapper">
+
+    <insert id="insert" parameterType="com.example.matjib.domain.PointHistory"
+            useGeneratedKeys="true" keyProperty="historyId">
+        INSERT INTO point_history (member_id, amount, type, reason)
+        VALUES (#{memberId}, #{amount}, #{type}, #{reason})
+    </insert>
+
+    <select id="findByMemberId" resultType="com.example.matjib.domain.PointHistory">
+        SELECT history_id, member_id, amount, type, reason, created_at
+        FROM point_history
+        WHERE member_id = #{memberId}
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>
