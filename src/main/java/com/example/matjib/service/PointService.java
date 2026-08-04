@@ -33,14 +33,6 @@ public class PointService {
         earn(memberId, REVIEW_REWARD, "리뷰 작성");
     }
 
-    /**
-     * 코스 추천 가게에 리뷰 작성 시 2배(200P) 적립.
-     */
-    @Transactional
-    public void earnForCourseReview(Long memberId) {
-        earn(memberId, REVIEW_REWARD * 2, "코스 맛집 리뷰 작성 (2배)");
-    }
-
     private void earn(Long memberId, int amount, String reason) {
         memberMapper.addPoint(memberId, amount);
         pointHistoryMapper.insert(PointHistory.builder()

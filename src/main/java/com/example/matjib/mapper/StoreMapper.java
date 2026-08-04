@@ -18,10 +18,16 @@ public interface StoreMapper {
     long countStores(StoreSearch search);
     void updateImage(@Param("storeId") Long storeId, @Param("imagePath") String imagePath);
 
-    // 코스 추천용
+    // 지역 맛집 BEST: 별점 4.0 이상 중 리뷰 많은 순 상위 N
+    List<StoreListItem> findBestStores(@Param("region") String region,
+                                       @Param("minRating") double minRating,
+                                       @Param("limit") int limit);
+
+    // 코스 추천용 (조건에 맞는 후보 중 랜덤 1곳)
     StoreListItem findCourseStore(@Param("region") String region,
                                   @Param("categories") List<String> categories,
                                   @Param("excludeStoreIds") List<Long> excludeStoreIds,
-                                  @Param("franchisePattern") String franchisePattern);
+                                  @Param("franchisePattern") String franchisePattern,
+                                  @Param("minRating") Double minRating);
     List<String> findCourseRegions();
 }

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('부미로 - 로그인')}"></head>
+<head th:replace="~{fragments/layout :: head('BUSEAT - 로그인')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: mainNav}"></nav>
 
 <div class="form-wrap">
     <h2>로그인</h2>
-    <p class="sub">부미로에 오신 걸 환영해요.</p>
+    <p class="sub">BUSEAT에 오신 걸 환영해요.</p>
 
     <div th:if="${param.error}" class="alert alert-error">아이디 또는 비밀번호가 올바르지 않습니다.</div>
     <div th:if="${param.logout}" class="alert alert-success">로그아웃되었습니다.</div>

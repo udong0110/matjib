@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('부미로 - 부산 맛집')}"></head>
+<head th:replace="~{fragments/layout :: head('BUSEAT - 부산 맛집')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: mainNav}"></nav>
 
@@ -42,7 +42,7 @@
 
             <div th:if="${!page.content.isEmpty()}">
                 <article class="review-card" th:each="st, stat : ${page.content}">
-                    <div class="thumb" th:if="${st.imagePath == null}">🍜</div>
+                    <div class="thumb" th:if="${st.imagePath == null}">사진 없음</div>
                     <img class="thumb" th:if="${st.imagePath != null}" th:src="@{${st.imagePath}}"
                          alt="가게 사진" style="object-fit:cover"/>
                     <div class="body">

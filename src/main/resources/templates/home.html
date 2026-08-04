@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('부미로 - 부산 맛집')}"></head>
+<head th:replace="~{fragments/layout :: head('BUSEAT - 부산 맛집')}"></head>
 <body>
 <!-- 상단: 로그인/회원가입만 -->
 <nav th:replace="~{fragments/layout :: navSimple}"></nav>
@@ -15,8 +15,8 @@
     </svg>
 
     <div class="hero-inner">
-        <h1 class="brand">부미로</h1>
-        <p class="brand-sub">釜味路 · 부산의 맛을 찾아가는 길</p>
+        <h1 class="brand">BUSEAT</h1>
+        <p class="brand-sub">BUSEAT · 부산을 맛보다</p>
         <p class="hero-copy">부산을 맛보러 떠나볼까요?</p>
 
         <form class="hero-search" th:action="@{/stores}" method="get" autocomplete="off">
@@ -76,21 +76,17 @@
     </nav>
 </section>
 
-<!-- ===== 지역 선택 + 인기 BEST ===== -->
-<section class="wrap section">
+<!-- ===== 지역 맛집 BEST ===== -->
+<section id="best-section" class="wrap section">
     <div class="section-head">
         <div>
-            <h2 class="section-title">지역별 인기 BEST</h2>
-            <p class="section-sub">지역을 선택하면 BEST 맛집과 하루 코스를 보여드려요</p>
+            <h2 class="section-title">지역 맛집 BEST</h2>
+            <p class="section-sub"
+               th:text="${selectedRegion != null} ? ${#strings.replace(selectedRegion,'부산 ','')} + '에서 평점 좋은 맛집' : '지역을 선택해 주세요'">
+                해운대구에서 평점 좋은 맛집
+            </p>
         </div>
     </div>
-
-    <nav class="region-nav">
-        <a th:each="rg : ${courseRegions}"
-           th:href="@{/(region=${rg})}"
-           th:text="${#strings.replace(rg, '부산 ', '')}"
-           th:classappend="${rg == selectedRegion} ? 'on'">해운대구</a>
-    </nav>
 
     <ol class="mini-cards" th:if="${best != null and !best.isEmpty()}">
         <li th:each="st, stat : ${best}">
@@ -108,22 +104,19 @@
                         <span th:text="${#strings.replace(st.region, '부산 ', '')}">해운대구</span>
                     </div>
                     <div class="mcard-score">
-                        <th:block th:if="${st.reviewCount > 0}">
-                            <span class="sc-star">★</span>
-                            <span class="sc-num" th:text="${st.avgRating}">4.6</span>
-                            <span class="sc-cnt" th:text="'리뷰 ' + ${st.reviewCount}">리뷰 12</span>
-                        </th:block>
-                        <span class="sc-none" th:if="${st.reviewCount == 0}">리뷰 없음</span>
+                        <span class="sc-star">★</span>
+                        <span class="sc-num" th:text="${st.avgRating}">4.6</span>
+                        <span class="sc-cnt" th:text="'리뷰 ' + ${st.reviewCount}">리뷰 12</span>
                     </div>
                 </div>
             </a>
         </li>
     </ol>
-    <p class="empty-line" th:if="${best == null or best.isEmpty()}">이 지역에는 아직 등록된 맛집이 없어요.</p>
+    <p class="empty-line" th:if="${best == null or best.isEmpty()}">아직 BEST 맛집이 없어요</p>
 </section>
 
-<!-- ===== 코스 추천 : 세로 타임라인 ===== -->
-<section class="wrap section">
+<!-- ===== 코스 추천 : 지역 선택 + 세로 타임라인 ===== -->
+<section id="course-section" class="wrap section">
     <div class="section-head">
         <div>
             <h2 class="section-title">하루 코스 추천</h2>
@@ -133,6 +126,13 @@
             </p>
         </div>
     </div>
+
+    <nav class="region-nav">
+        <a th:each="rg : ${courseRegions}"
+           th:href="@{/(region=${rg})}"
+           th:text="${#strings.replace(rg, '부산 ', '')}"
+           th:classappend="${rg == selectedRegion} ? 'on'">해운대구</a>
+    </nav>
 
     <ol class="course-cards" th:if="${course != null and !course.isEmpty()}">
         <li class="cc-item" th:each="stop, stat : ${course}">
@@ -147,7 +147,7 @@
                 </div>
                 <div class="ccard-body">
                     <div class="ccard-top">
-                        <span class="ccard-slot" th:text="${stop.emoji} + ' ' + ${stop.slot}">🌅 아침</span>
+                        <span class="ccard-slot" th:text="${stop.slot}">아침</span>
                         <span class="ccard-dist" th:if="${stop.distanceLabel != null}" th:text="${stop.distanceLabel}">+1.2km</span>
                     </div>
                     <div class="ccard-name" th:text="${stop.store.storeName}">가게 이름</div>
@@ -173,6 +173,30 @@
     </p>
 </section>
 
-<footer class="foot">부미로 釜味路 · 부산의 맛을 찾아가는 길</footer>
+<script>
+    // 지역 선택 시 페이지 새로고침 없이 BEST/코스 추천 영역만 그 자리에서 교체
+    (function () {
+        function swap(id, doc) {
+            var oldEl = document.getElementById(id);
+            var newEl = doc.getElementById(id);
+            if (oldEl && newEl) oldEl.replaceWith(newEl);
+        }
+        document.addEventListener('click', function (e) {
+            var link = e.target.closest('.region-nav a');
+            if (!link) return;
+            e.preventDefault();
+            var url = link.getAttribute('href');
+            fetch(url)
+                .then(function (res) { return res.text(); })
+                .then(function (html) {
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    swap('best-section', doc);
+                    swap('course-section', doc);
+                    history.pushState(null, '', url);
+                })
+                .catch(function () { window.location.href = url; });
+        });
+    })();
+</script>
 </body>
 </html>

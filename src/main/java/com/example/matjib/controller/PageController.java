@@ -35,9 +35,12 @@ public class PageController {
     @org.springframework.beans.factory.annotation.Value("${kakao.js-key:}")
     private String kakaoJsKey;
 
+    // 부산 16개 구/군 전체 (실제 데이터 유무와 무관하게 필터에 항상 노출)
     private static final List<String> REGIONS = List.of(
-            "부산 해운대구", "부산 수영구", "부산 부산진구", "부산 중구", "부산 동구",
-            "부산 남구", "부산 금정구", "부산 기장군", "부산 사하구", "부산 영도구");
+            "부산 중구", "부산 서구", "부산 동구", "부산 영도구", "부산 부산진구",
+            "부산 동래구", "부산 남구", "부산 북구", "부산 해운대구", "부산 사하구",
+            "부산 금정구", "부산 강서구", "부산 연제구", "부산 수영구", "부산 사상구",
+            "부산 기장군");
 
     // 홈 (랜딩): 히어로 + 식당 리스트(페이징) + 지역 BEST + 코스
     @GetMapping("/")
@@ -54,12 +57,8 @@ public class PageController {
         listSearch.setSize(8);
         model.addAttribute("page", storeService.getStores(listSearch));
 
-        // 지역별 인기 BEST 3곳
         if (selectedRegion != null) {
-            StoreSearch bestSearch = new StoreSearch();
-            bestSearch.setRegion(selectedRegion);
-            bestSearch.setSize(3);
-            model.addAttribute("best", storeService.getStores(bestSearch).getContent());
+            model.addAttribute("best", storeService.getBestStores(selectedRegion));
             model.addAttribute("course", courseService.getCourse(selectedRegion));
         }
 

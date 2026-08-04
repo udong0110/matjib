@@ -21,8 +21,6 @@ public class ReviewService {
     private final MemberService memberService;
     private final PointService pointService;
     private final VisitService visitService;
-    private final StoreService storeService;
-    private final CourseService courseService;
 
     // 목록 + 검색 + 페이징
     public PageResponse<ReviewResponse> getReviews(ReviewSearch search) {
@@ -66,18 +64,10 @@ public class ReviewService {
 
         reviewMapper.insert(review);
 
-        // 리뷰 작성 보상: 코스 추천 가게면 2배(200P), 아니면 1배(100P).
-        // (같은 트랜잭션 → 하나라도 실패하면 전부 롤백)
-        com.example.matjib.domain.Store store = storeService.getStore(request.getStoreId());
-        boolean isCourse = courseService.isCourseStore(store.getStoreId(), store.getRegion());
-        if (isCourse) {
-            pointService.earnForCourseReview(writer.getMemberId());
-        } else {
-            pointService.earnForReview(writer.getMemberId());
-        }
+        // 리뷰 작성 보상: 100P (같은 트랜잭션 → 실패하면 전부 롤백)
+        pointService.earnForReview(writer.getMemberId());
 
-        log.info("리뷰 작성: reviewId={}, writer={}, 코스가게={}",
-                review.getReviewId(), username, isCourse);
+        log.info("리뷰 작성: reviewId={}, writer={}", review.getReviewId(), username);
         return review.getReviewId();
     }
 

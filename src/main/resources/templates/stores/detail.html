@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('부미로 - ' + ${store.storeName})}"></head>
+<head th:replace="~{fragments/layout :: head('BUSEAT - ' + ${store.storeName})}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: mainNav}"></nav>
 
@@ -34,7 +34,7 @@
     <!-- 대표 이미지 (가게 대표사진 or 플레이스홀더) -->
     <div class="hero-img">
         <img th:if="${store.imagePath != null}" th:src="@{${store.imagePath}}" alt="가게 사진"/>
-        <div th:unless="${store.imagePath != null}" class="hero-placeholder">🍜</div>
+        <div th:unless="${store.imagePath != null}" class="hero-placeholder">사진 준비중</div>
     </div>
 
     <!-- 관리자: 대표사진 등록 -->

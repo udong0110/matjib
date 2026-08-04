@@ -4,7 +4,7 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title}">부미로</title>
+    <title th:text="${title}">BUSEAT</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
@@ -12,6 +12,7 @@
 <!-- ===== 일반 헤더 (로그인/마이페이지) ===== -->
 <nav class="nav" th:fragment="mainNav">
     <div class="right">
+        <a th:href="@{/}">홈</a>
         <a sec:authorize="!isAuthenticated()" th:href="@{/login}">로그인</a>
         <a sec:authorize="!isAuthenticated()" th:href="@{/signup}"><button class="btn-login">회원가입</button></a>
         <a sec:authorize="isAuthenticated()" th:href="@{/mypage}">마이페이지</a>

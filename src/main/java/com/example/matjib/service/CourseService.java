@@ -11,8 +11,9 @@ import java.util.List;
 
 /**
  * 지역별 맛집 코스 추천.
- * 아침(카페) / 점심(식사류+카페) / 저녁(식사류, 카페 제외) 각 1곳씩.
- * 선정 우선순위: 리뷰10개+별점순 → 리뷰많은순 → 로컬(프랜차이즈 제외) 우선.
+ * 아침(카페) / 점심(식사류) / 저녁(식사류) 각 1곳씩 — 카페는 아침에만.
+ * 유명 맛집만 반복 노출되지 않도록, 별점 3.0 이상인 후보 중에서 랜덤으로 뽑아
+ * 지역 상권을 고루 노출한다. 프랜차이즈는 제외하고 로컬 가게를 우선한다.
  */
 @Service
 @RequiredArgsConstructor
@@ -20,7 +21,10 @@ public class CourseService {
 
     private final StoreMapper storeMapper;
 
-    // 프랜차이즈(체인) 추정 이름 패턴 — 이 이름이 들어가면 로컬이 아니라고 보고 뒤로 밀기
+    // 코스 후보로 인정하는 최소 평균 별점
+    private static final double MIN_RATING = 3.0;
+
+    // 프랜차이즈(체인) 추정 이름 패턴 — 이 이름이 들어가면 로컬이 아니라고 보고 후보에서 제외
     private static final String FRANCHISE_PATTERN =
             "스타벅스|투썸|이디야|메가|빽다방|컴포즈|커피빈|폴바셋|엔제리너스|" +
             "맥도날드|롯데리아|버거킹|맘스터치|KFC|서브웨이|" +
@@ -29,17 +33,15 @@ public class CourseService {
 
     private static final List<String> MEAL_ONLY = List.of("한식", "양식", "일식", "중식");
     private static final List<String> CAFE = List.of("카페");
-    private static final List<String> LUNCH = List.of("한식", "양식", "일식", "중식", "카페");
 
     @Getter
     public static class CourseStop {
         private final String slot;      // 아침/점심/저녁
-        private final String emoji;
         private final StoreListItem store;
         private String distanceLabel;   // 아침 가게 기준 거리 ("+1.2km"), 아침은 "출발"
 
-        public CourseStop(String slot, String emoji, StoreListItem store) {
-            this.slot = slot; this.emoji = emoji; this.store = store;
+        public CourseStop(String slot, StoreListItem store) {
+            this.slot = slot; this.store = store;
         }
         public void setDistanceLabel(String label) { this.distanceLabel = label; }
     }
@@ -52,31 +54,44 @@ public class CourseService {
         List<CourseStop> course = new ArrayList<>();
         List<Long> picked = new ArrayList<>();
 
-        // 🌅 아침 = 카페 → 없으면 일반 식당 → 그래도 없으면 아무 가게
-        addStopWithFallback(course, picked, region, "아침", "🌅", CAFE);
-        // ☀️ 점심 = 일반 식당+카페 → 없으면 아무 가게
-        addStopWithFallback(course, picked, region, "점심", "☀️", LUNCH);
-        // 🌙 저녁 = 일반 식당 → 없으면 아무 가게
-        addStopWithFallback(course, picked, region, "저녁", "🌙", MEAL_ONLY);
+        // 아침 = 카페 → 없으면 일반 식당 → 그래도 없으면 아무 가게
+        addStopWithFallback(course, picked, region, "아침", CAFE);
+        // 점심 = 일반 식당(카페 제외) → 없으면 아무 가게
+        addStopWithFallback(course, picked, region, "점심", MEAL_ONLY);
+        // 저녁 = 일반 식당(카페 제외) → 없으면 아무 가게
+        addStopWithFallback(course, picked, region, "저녁", MEAL_ONLY);
 
         applyDistances(course);
         return course;
     }
 
     /**
-     * 해당 시간대 가게를 뽑되, 조건에 맞는 가게가 없으면
-     * 카테고리 조건을 풀고 그 지역 아무 가게라도 끌어와서 슬롯을 반드시 채운다.
+     * 해당 시간대 가게를 후보 중 랜덤으로 뽑는다. 단계적으로 조건을 완화해서
+     * 슬롯이 항상 채워지도록 폴백한다:
+     *   1) 시간대 카테고리 + 별점 3.0 이상 + 프랜차이즈 제외 → 랜덤
+     *   2) (콜드스타트) 별점 조건 없이 시간대 카테고리 + 프랜차이즈 제외 → 랜덤
+     *   3) 카테고리 조건도 풀고 그 지역 전체 + 프랜차이즈 제외 → 랜덤
+     *   4) 최후: 프랜차이즈 제외도 풀고 그 지역 아무 가게 → 랜덤 (반드시 채움)
      */
     private void addStopWithFallback(List<CourseStop> course, List<Long> picked,
-                                     String region, String slot, String emoji, List<String> categories) {
-        StoreListItem store = storeMapper.findCourseStore(region, categories, picked, FRANCHISE_PATTERN);
+                                     String region, String slot, List<String> categories) {
+        StoreListItem store = storeMapper.findCourseStore(
+                region, categories, picked, FRANCHISE_PATTERN, MIN_RATING);
         if (store == null) {
-            // 카테고리 조건 없이 그 지역 아무 가게 (리뷰 많은 순) — 강제 채움
-            store = storeMapper.findCourseStore(region, null, picked, FRANCHISE_PATTERN);
+            store = storeMapper.findCourseStore(
+                    region, categories, picked, FRANCHISE_PATTERN, null);
+        }
+        if (store == null) {
+            store = storeMapper.findCourseStore(
+                    region, null, picked, FRANCHISE_PATTERN, null);
+        }
+        if (store == null) {
+            store = storeMapper.findCourseStore(
+                    region, null, picked, null, null);
         }
         if (store != null) {
             picked.add(store.getStoreId());
-            course.add(new CourseStop(slot, emoji, store));
+            course.add(new CourseStop(slot, store));
         }
     }
 
@@ -106,11 +121,5 @@ public class CourseService {
                 + Math.cos(Math.toRadians(a.getLatitude())) * Math.cos(Math.toRadians(b.getLatitude()))
                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-    }
-
-    // 특정 가게가 해당 지역 코스에 포함되는지 (포인트 2배 판단용)
-    public boolean isCourseStore(Long storeId, String region) {
-        return getCourse(region).stream()
-                .anyMatch(stop -> stop.getStore().getStoreId().equals(storeId));
     }
 }
