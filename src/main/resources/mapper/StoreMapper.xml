@@ -78,8 +78,10 @@
     </update>
 
     <!--
-      코스 가게 1곳 선정 (지역 + 카테고리 조건 + 최소 별점 조건에 맞는 후보 중 랜덤 1곳).
-      유명 맛집만 반복 노출되지 않도록 순위 정렬 대신 RAND()로 뽑는다.
+      코스 가게 1곳 선정 (지역 + 카테고리 조건 + 최소 별점 조건에 맞는 후보 중 seed 기반 랜덤 1곳).
+      유명 맛집만 반복 노출되지 않도록 순위 정렬 대신 RAND(seed)로 뽑는다.
+      seed가 같으면 같은 순서로 셔플되므로, 날짜 기반 seed를 넘기면 하루 동안은 같은 결과 유지,
+      날짜가 바뀌면 자동으로 새로 섞인다 (CourseService 참고).
       categories: 콤마 없이 리스트로 받아 IN 절 생성. excludeStoreIds: 이미 코스에 뽑힌 가게 제외.
       franchisePattern이 null이면 프랜차이즈 제외를 적용하지 않음(최후 폴백용).
       minRating이 null이면 별점 조건 없이 지역 내 랜덤(콜드스타트 폴백용).
@@ -114,7 +116,7 @@
         <if test="minRating != null">
             HAVING AVG(r.rating) >= #{minRating}
         </if>
-        ORDER BY RAND()
+        ORDER BY RAND(#{seed})
         LIMIT 1
     </select>
 

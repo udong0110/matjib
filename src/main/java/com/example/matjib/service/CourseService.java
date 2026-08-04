@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,10 +53,13 @@ public class CourseService {
     public List<CourseStop> getCourse(String region) {
         List<CourseStop> course = new ArrayList<>();
         List<Long> picked = new ArrayList<>();
+        // 날짜 + 지역 기반 seed -> 같은 날 같은 지역이면 항상 같은 코스, 자정 지나면 자동으로 바뀜
+        // (RAND(seed)에 음수를 넘기지 않도록 절댓값 사용)
+        long seed = Math.abs(LocalDate.now().toEpochDay() * 31 + region.hashCode());
 
-        addStopWithFallback(course, picked, region, "아침", CAFE);
-        addStopWithFallback(course, picked, region, "점심", MEAL_ONLY);
-        addStopWithFallback(course, picked, region, "저녁", MEAL_ONLY);
+        addStopWithFallback(course, picked, region, "아침", CAFE, seed);
+        addStopWithFallback(course, picked, region, "점심", MEAL_ONLY, seed);
+        addStopWithFallback(course, picked, region, "저녁", MEAL_ONLY, seed);
 
         applyDistances(course);
         return course;
@@ -70,20 +74,20 @@ public class CourseService {
      *   4) 최후: 프랜차이즈 제외도 풀고 그 지역 아무 가게 → 랜덤 (반드시 채움)
      */
     private void addStopWithFallback(List<CourseStop> course, List<Long> picked,
-                                     String region, String slot, List<String> categories) {
+                                     String region, String slot, List<String> categories, long seed) {
         StoreListItem store = storeMapper.findCourseStore(
-                region, categories, picked, FRANCHISE_PATTERN, MIN_RATING);
+                region, categories, picked, FRANCHISE_PATTERN, MIN_RATING, seed);
         if (store == null) {
             store = storeMapper.findCourseStore(
-                    region, categories, picked, FRANCHISE_PATTERN, null);
+                    region, categories, picked, FRANCHISE_PATTERN, null, seed);
         }
         if (store == null) {
             store = storeMapper.findCourseStore(
-                    region, null, picked, FRANCHISE_PATTERN, null);
+                    region, null, picked, FRANCHISE_PATTERN, null, seed);
         }
         if (store == null) {
             store = storeMapper.findCourseStore(
-                    region, null, picked, null, null);
+                    region, null, picked, null, null, seed);
         }
         if (store != null) {
             picked.add(store.getStoreId());

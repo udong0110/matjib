@@ -22,11 +22,12 @@ public interface StoreMapper {
                                        @Param("minRating") double minRating,
                                        @Param("limit") int limit);
 
-    // 코스 추천용 (조건에 맞는 후보 중 랜덤 1곳)
+    // 코스 추천용 (조건에 맞는 후보 중 seed로 정렬해서 1곳 선택 — 같은 날엔 같은 seed로 같은 결과)
     StoreListItem findCourseStore(@Param("region") String region,
                                   @Param("categories") List<String> categories,
                                   @Param("excludeStoreIds") List<Long> excludeStoreIds,
                                   @Param("franchisePattern") String franchisePattern,
-                                  @Param("minRating") Double minRating);
+                                  @Param("minRating") Double minRating,
+                                  @Param("seed") long seed);
     List<String> findCourseRegions();
 }
