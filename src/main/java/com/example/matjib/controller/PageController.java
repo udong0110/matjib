@@ -5,16 +5,20 @@ import com.example.matjib.domain.PointHistory;
 import com.example.matjib.domain.Store;
 import com.example.matjib.dto.*;
 import com.example.matjib.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Controller
 @RequiredArgsConstructor
@@ -37,6 +41,15 @@ public class PageController {
             "부산 동래구", "부산 남구", "부산 북구", "부산 해운대구", "부산 사하구",
             "부산 금정구", "부산 강서구", "부산 연제구", "부산 수영구", "부산 사상구",
             "부산 기장군");
+
+    // 업로드 용량 초과 시 Spring이 컨트롤러 메서드 진입 전에 예외를 던져서
+    // 각 메서드의 try/catch로는 못 잡음 -> 컨트롤러 레벨 핸들러로 잡아서 원래 페이지로 돌려보냄
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public String handleMaxUploadSize(HttpServletRequest request, RedirectAttributes ra) {
+        ra.addFlashAttribute("error", "이미지 용량이 너무 커요. 10MB 이하로 올려주세요.");
+        Matcher m = Pattern.compile("/stores/(\\d+)").matcher(request.getRequestURI());
+        return m.find() ? "redirect:/stores/" + m.group(1) : "redirect:/stores";
+    }
 
     @GetMapping("/")
     public String home(@RequestParam(value = "region", required = false) String region,
