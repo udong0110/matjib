@@ -16,6 +16,7 @@ import java.util.List;
 public class StoreService {
 
     private final StoreMapper storeMapper;
+    private final FileStorageService fileStorageService;
 
     public List<Store> getAllStores() {
         return storeMapper.findAll();
@@ -42,5 +43,11 @@ public class StoreService {
 
     public void updateImage(Long storeId, String imagePath) {
         storeMapper.updateImage(storeId, imagePath);
+    }
+
+    public void deleteImage(Long storeId) {
+        Store store = getStore(storeId);
+        fileStorageService.delete(store.getImagePath());
+        storeMapper.updateImage(storeId, null);
     }
 }

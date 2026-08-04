@@ -31,15 +31,20 @@
 
     <div class="hero-img">
         <img th:if="${store.imagePath != null}" th:src="@{${store.imagePath}}" alt="가게 사진"/>
-        <div th:unless="${store.imagePath != null}" class="hero-placeholder">사진 준비중</div>
+        <div th:unless="${store.imagePath != null}" class="hero-placeholder">가게 사장님이 사진을 준비중입니다</div>
     </div>
 
-    <div sec:authorize="hasRole('ADMIN')" style="margin:12px 0">
+    <div sec:authorize="hasRole('ADMIN')" style="margin:12px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <form th:action="@{/admin/stores/{id}/image(id=${store.storeId})}" method="post"
               enctype="multipart/form-data" style="display:flex;gap:10px;align-items:center">
             <span style="font-size:13px;color:var(--gray)">[관리자] 가게 대표사진:</span>
             <input type="file" name="image" accept="image/*" required/>
             <button type="submit" class="btn-login" style="padding:8px 16px">등록</button>
+        </form>
+        <form th:if="${store.imagePath != null}"
+              th:action="@{/admin/stores/{id}/image/delete(id=${store.storeId})}" method="post"
+              onsubmit="return confirm('대표사진을 삭제할까요?');">
+            <button type="submit" class="btn-del">대표사진 삭제</button>
         </form>
     </div>
 

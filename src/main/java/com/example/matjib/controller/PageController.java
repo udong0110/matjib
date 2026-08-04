@@ -138,6 +138,17 @@ public class PageController {
         return "redirect:/stores/" + storeId;
     }
 
+    @PostMapping("/admin/stores/{storeId}/image/delete")
+    public String deleteStoreImage(@PathVariable Long storeId, RedirectAttributes ra) {
+        try {
+            storeService.deleteImage(storeId);
+            ra.addFlashAttribute("message", "가게 대표사진을 삭제했어요.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/stores/" + storeId;
+    }
+
     @PostMapping("/admin/reviews/{reviewId}/delete")
     public String adminDeleteReview(@PathVariable Long reviewId,
                                     @RequestParam Long storeId,

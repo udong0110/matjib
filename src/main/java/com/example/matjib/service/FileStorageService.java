@@ -56,4 +56,19 @@ public class FileStorageService {
                     "파일 저장 중 오류가 발생했습니다.");
         }
     }
+
+    /** 웹 경로("/uploads/파일명")에 해당하는 로컬 파일을 삭제. 실패해도 예외를 던지지 않음. */
+    public void delete(String webPath) {
+        if (webPath == null || webPath.isBlank()) {
+            return;
+        }
+        String filename = webPath.substring(webPath.lastIndexOf('/') + 1);
+        Path target = Paths.get(uploadDir).toAbsolutePath().normalize().resolve(filename);
+        try {
+            Files.deleteIfExists(target);
+            log.info("파일 삭제: {}", target);
+        } catch (IOException e) {
+            log.warn("파일 삭제 실패: {}", target, e);
+        }
+    }
 }
