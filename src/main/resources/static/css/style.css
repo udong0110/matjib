@@ -649,7 +649,7 @@ a { color: inherit; text-decoration: none; }
 .ccard-score { font-size: 13px; color: var(--ink-600); margin-top: 8px; font-weight: 600; }
 .ccard-score .sc-num { font-weight: 800; color: var(--ink-900); }
 
-#course-section { padding-bottom: 80px; }
+#course-section { padding-bottom: 80px; scroll-margin-top: 90px; }
 
 @media (max-width: 900px) { .card-grid, .mini-cards { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 720px) {

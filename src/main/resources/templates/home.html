@@ -72,7 +72,7 @@
     </nav>
 </section>
 
-<section id="best-section" class="wrap section">
+<section class="wrap section">
     <div class="section-head">
         <div>
             <h2 class="section-title">지역 맛집 BEST</h2>
@@ -123,7 +123,7 @@
 
     <nav class="region-nav">
         <a th:each="rg : ${courseRegions}"
-           th:href="@{/(region=${rg})}"
+           th:href="@{/(region=${rg})} + '#course-section'"
            th:text="${#strings.replace(rg, '부산 ', '')}"
            th:classappend="${rg == selectedRegion} ? 'on'">해운대구</a>
     </nav>
@@ -166,31 +166,5 @@
         이 지역은 아직 코스를 구성할 가게가 부족해요.
     </p>
 </section>
-
-<script>
-    // 지역 선택 시 페이지 새로고침 없이 BEST/코스 추천 영역만 그 자리에서 교체
-    (function () {
-        function swap(id, doc) {
-            var oldEl = document.getElementById(id);
-            var newEl = doc.getElementById(id);
-            if (oldEl && newEl) oldEl.replaceWith(newEl);
-        }
-        document.addEventListener('click', function (e) {
-            var link = e.target.closest('.region-nav a');
-            if (!link) return;
-            e.preventDefault();
-            var url = link.getAttribute('href');
-            fetch(url)
-                .then(function (res) { return res.text(); })
-                .then(function (html) {
-                    var doc = new DOMParser().parseFromString(html, 'text/html');
-                    swap('best-section', doc);
-                    swap('course-section', doc);
-                    history.pushState(null, '', url);
-                })
-                .catch(function () { window.location.href = url; });
-        });
-    })();
-</script>
 </body>
 </html>
