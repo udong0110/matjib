@@ -23,19 +23,19 @@ public class KakaoPlaceResponse {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Document {
         @JsonProperty("place_name")
-        private String placeName;           // 가게 이름
+        private String placeName;
 
         @JsonProperty("category_name")
-        private String categoryName;        // "음식점 > 한식 > 육류,고기" 형태
+        private String categoryName;        // "음식점 > 한식 > 육류,고기" 형태로 내려옴
 
         @JsonProperty("road_address_name")
-        private String roadAddressName;     // 도로명 주소
+        private String roadAddressName;
 
         @JsonProperty("address_name")
-        private String addressName;         // 지번 주소
+        private String addressName;
 
-        private String phone;               // 전화번호
-        private String x;                   // 경도(longitude)
+        private String phone;
+        private String x;                   // 경도(longitude) — 카카오 API는 x/y 순, 위경도 아님
         private String y;                   // 위도(latitude)
     }
 }

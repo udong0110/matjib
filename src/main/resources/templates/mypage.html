@@ -8,7 +8,6 @@
     <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
     <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-    <!-- 포인트 카드 -->
     <div class="mypage-hero">
         <div class="greeting">안녕하세요,</div>
         <div class="name" th:text="${member.nickname} + '님'">홍길동님</div>
@@ -35,7 +34,6 @@
         </form>
     </div>
 
-    <!-- 포인트 내역 -->
     <h2 class="section-title">포인트 내역</h2>
     <div class="point-list" th:if="${!history.isEmpty()}">
         <div class="point-row" th:each="h : ${history}">

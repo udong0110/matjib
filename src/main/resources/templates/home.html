@@ -3,10 +3,8 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('BUSEAT - 부산 맛집')}"></head>
 <body>
-<!-- 상단: 로그인/회원가입만 -->
 <nav th:replace="~{fragments/layout :: navSimple}"></nav>
 
-<!-- ===== 히어로 : 로고 + 카피 + 검색창 ===== -->
 <section class="hero">
     <svg class="hero-waves" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0,70 C240,110 480,30 720,60 C960,90 1200,40 1440,70" fill="none" stroke="currentColor" stroke-width="1"/>
@@ -26,7 +24,6 @@
     </div>
 </section>
 
-<!-- ===== 식당 리스트 : 썸네일 카드 + 숫자 페이징 ===== -->
 <section class="wrap section">
     <div class="section-head">
         <div>
@@ -62,7 +59,6 @@
         </a>
     </div>
 
-    <!-- 숫자 페이징 -->
     <nav class="pager" th:if="${page.totalPages > 1}">
         <a th:href="@{/(region=${selectedRegion},page=${page.page - 1})}"
            th:classappend="${page.page <= 1} ? 'off'">‹</a>
@@ -76,7 +72,6 @@
     </nav>
 </section>
 
-<!-- ===== 지역 맛집 BEST ===== -->
 <section id="best-section" class="wrap section">
     <div class="section-head">
         <div>
@@ -115,7 +110,6 @@
     <p class="empty-line" th:if="${best == null or best.isEmpty()}">아직 BEST 맛집이 없어요</p>
 </section>
 
-<!-- ===== 코스 추천 : 지역 선택 + 세로 타임라인 ===== -->
 <section id="course-section" class="wrap section">
     <div class="section-head">
         <div>

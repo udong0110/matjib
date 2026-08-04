@@ -13,7 +13,6 @@ public interface StoreMapper {
     int countByNameAndAddress(Store store);   // 시딩 시 중복 체크
     void insert(Store store);
 
-    // 가게 목록 (이름 검색 + 지역 필터 + 페이징, 리뷰 수/평균별점 조인)
     List<StoreListItem> findStores(StoreSearch search);
     long countStores(StoreSearch search);
     void updateImage(@Param("storeId") Long storeId, @Param("imagePath") String imagePath);

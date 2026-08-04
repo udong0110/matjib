@@ -12,7 +12,6 @@ public class BusinessException extends RuntimeException {
         this.status = status;
     }
 
-    // 자주 쓰는 케이스 정적 팩토리
     public static BusinessException notFound(String message) {
         return new BusinessException(HttpStatus.NOT_FOUND, message);
     }

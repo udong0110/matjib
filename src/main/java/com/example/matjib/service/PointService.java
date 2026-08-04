@@ -20,8 +20,8 @@ public class PointService {
     private final MemberMapper memberMapper;
     private final PointHistoryMapper pointHistoryMapper;
 
-    public static final int REVIEW_REWARD = 100;     // 리뷰 1건당 적립
-    public static final int REFUND_UNIT = 3000;      // 환급 최소 단위(3000점 = 3000원)
+    public static final int REVIEW_REWARD = 100;
+    public static final int REFUND_UNIT = 3000;      // 3000점 = 3000원 (1:1)
 
     /**
      * 리뷰 작성 시 포인트 적립.
@@ -60,7 +60,7 @@ public class PointService {
                     "환급은 " + REFUND_UNIT + "점 이상부터 가능합니다. (현재 " + member.getPoint() + "점)");
         }
 
-        memberMapper.addPoint(memberId, -REFUND_UNIT);   // 차감
+        memberMapper.addPoint(memberId, -REFUND_UNIT);
         pointHistoryMapper.insert(PointHistory.builder()
                 .memberId(memberId)
                 .amount(-REFUND_UNIT)

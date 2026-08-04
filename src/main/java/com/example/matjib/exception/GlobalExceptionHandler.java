@@ -15,7 +15,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 비즈니스 예외 (404/403/409 등)
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException e) {
         log.warn("[BusinessException] {} - {}", e.getStatus(), e.getMessage());
@@ -23,7 +22,6 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getStatus().value(), e.getMessage()));
     }
 
-    // @Valid 유효성 검증 실패
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
         Map<String, String> fieldErrors = new HashMap<>();
@@ -35,7 +33,6 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "입력값이 올바르지 않습니다.", fieldErrors));
     }
 
-    // 그 외 모든 예외
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAll(Exception e) {
         log.error("[UnhandledException]", e);

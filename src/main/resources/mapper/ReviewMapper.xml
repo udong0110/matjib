@@ -3,7 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.matjib.mapper.ReviewMapper">
 
-    <!-- 검색 조건 재사용 (동적쿼리) -->
     <sql id="searchCondition">
         <where>
             <if test="keyword != null and keyword != ''">
@@ -22,7 +21,6 @@
         </where>
     </sql>
 
-    <!-- 목록: review + member + store 3테이블 JOIN + 동적조건 + 페이징 -->
     <select id="findReviews" parameterType="com.example.matjib.dto.ReviewSearch"
             resultType="com.example.matjib.dto.ReviewResponse">
         SELECT r.review_id, r.title, r.content, r.rating, r.image_path, r.created_at,
@@ -36,7 +34,6 @@
         LIMIT #{offset}, #{size}
     </select>
 
-    <!-- 페이징 total count: 같은 동적조건 재사용 -->
     <select id="countReviews" parameterType="com.example.matjib.dto.ReviewSearch"
             resultType="long">
         SELECT COUNT(*)
@@ -46,7 +43,6 @@
         <include refid="searchCondition"/>
     </select>
 
-    <!-- 상세 조회 (조인) -->
     <select id="findById" resultType="com.example.matjib.dto.ReviewResponse">
         SELECT r.review_id, r.title, r.content, r.rating, r.image_path, r.created_at,
                m.member_id, m.nickname AS writer_nickname,
@@ -57,7 +53,6 @@
         WHERE r.review_id = #{reviewId}
     </select>
 
-    <!-- 가게별 리뷰 목록 (가게 상세 페이지용) -->
     <select id="findByStoreId" resultType="com.example.matjib.dto.ReviewResponse">
         SELECT r.review_id, r.title, r.content, r.rating, r.image_path, r.created_at,
                m.member_id, m.nickname AS writer_nickname,
@@ -69,7 +64,6 @@
         ORDER BY r.created_at DESC
     </select>
 
-    <!-- 작성자 검증용 순수 엔티티 -->
     <select id="findEntityById" resultType="com.example.matjib.domain.Review">
         SELECT review_id, member_id, store_id, title, content, rating,
                created_at, updated_at

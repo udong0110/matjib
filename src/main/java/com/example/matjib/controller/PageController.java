@@ -16,10 +16,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-/**
- * Thymeleaf 화면 렌더링 컨트롤러.
- * 홈 = 가게 목록, 가게 상세 = 리뷰 목록 + 방문 인증 + 리뷰 작성.
- */
 @Controller
 @RequiredArgsConstructor
 public class PageController {
@@ -42,7 +38,6 @@ public class PageController {
             "부산 금정구", "부산 강서구", "부산 연제구", "부산 수영구", "부산 사상구",
             "부산 기장군");
 
-    // 홈 (랜딩): 히어로 + 식당 리스트(페이징) + 지역 BEST + 코스
     @GetMapping("/")
     public String home(@RequestParam(value = "region", required = false) String region,
                        @RequestParam(value = "page", defaultValue = "1") int page,
@@ -51,7 +46,6 @@ public class PageController {
         String selectedRegion = (region != null && !region.isBlank()) ? region
                 : (courseRegions.isEmpty() ? null : courseRegions.get(0));
 
-        // 식당 리스트 (썸네일 카드 + 숫자 페이징) — 8개씩
         StoreSearch listSearch = new StoreSearch();
         listSearch.setPage(page);
         listSearch.setSize(8);
@@ -67,7 +61,6 @@ public class PageController {
         return "home";
     }
 
-    // ===== 가게 목록 (메인) =====
     @GetMapping("/stores")
     public String storeList(@ModelAttribute StoreSearch search, Model model) {
         PageResponse<StoreListItem> page = storeService.getStores(search);
@@ -78,7 +71,6 @@ public class PageController {
         return "stores/list";
     }
 
-    // ===== 가게 상세 (리뷰 목록 + 방문 인증 + 리뷰 작성) =====
     @GetMapping("/stores/{storeId}")
     public String storeDetail(@PathVariable Long storeId,
                               @AuthenticationPrincipal UserDetails user,
@@ -86,7 +78,6 @@ public class PageController {
         Store store = storeService.getStore(storeId);
         List<ReviewResponse> reviews = reviewService.getReviewsByStore(storeId);
 
-        // 평균 별점 미리 계산
         Double avgRating = reviews.isEmpty() ? null :
                 reviews.stream().mapToInt(ReviewResponse::getRating).average().orElse(0);
 
@@ -95,7 +86,6 @@ public class PageController {
         model.addAttribute("avgRating", avgRating);
         model.addAttribute("rewardPoint", PointService.REVIEW_REWARD);
 
-        // 로그인한 사용자의 방문 인증 여부
         boolean visited = false;
         if (user != null) {
             Member member = memberService.getByUsername(user.getUsername());
@@ -106,7 +96,6 @@ public class PageController {
         return "stores/detail";
     }
 
-    // 방문 인증 처리
     @PostMapping("/stores/{storeId}/visit")
     public String certifyVisit(@PathVariable Long storeId,
                                @AuthenticationPrincipal UserDetails user,
@@ -116,7 +105,6 @@ public class PageController {
         return "redirect:/stores/" + storeId;
     }
 
-    // 리뷰 작성 처리 (가게 상세에서 제출 + 사진 업로드)
     @PostMapping("/stores/{storeId}/reviews")
     public String createReview(@PathVariable Long storeId,
                                @ModelAttribute ReviewRequest request,
@@ -133,7 +121,7 @@ public class PageController {
         return "redirect:/stores/" + storeId;
     }
 
-    // 가게 대표사진 등록 (관리자만) — /admin/ 경로라 Security에서 ROLE_ADMIN 요구
+    // /admin/ 경로라 SecurityConfig에서 ROLE_ADMIN을 요구함
     @PostMapping("/admin/stores/{storeId}/image")
     public String uploadStoreImage(@PathVariable Long storeId,
                                    @RequestParam("image") MultipartFile image,
@@ -150,7 +138,6 @@ public class PageController {
         return "redirect:/stores/" + storeId;
     }
 
-    // 리뷰 삭제 (관리자 전용) → 가게 상세로 복귀
     @PostMapping("/admin/reviews/{reviewId}/delete")
     public String adminDeleteReview(@PathVariable Long reviewId,
                                     @RequestParam Long storeId,
@@ -164,7 +151,6 @@ public class PageController {
         return "redirect:/stores/" + storeId;
     }
 
-    // ===== 로그인 / 회원가입 =====
     @GetMapping("/login")
     public String login() {
         return "login";
@@ -186,7 +172,6 @@ public class PageController {
         return "redirect:/login?joined";
     }
 
-    // ===== 마이페이지 (포인트 + 환급) =====
     @GetMapping("/mypage")
     public String mypage(@AuthenticationPrincipal UserDetails user, Model model) {
         Member member = memberService.getByUsername(user.getUsername());

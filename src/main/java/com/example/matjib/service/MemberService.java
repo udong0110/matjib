@@ -20,7 +20,6 @@ public class MemberService {
 
     @Transactional
     public Long signup(SignupRequest request) {
-        // 아이디 중복 체크
         if (memberMapper.countByUsername(request.getUsername()) > 0) {
             throw BusinessException.conflict("이미 사용 중인 아이디입니다.");
         }

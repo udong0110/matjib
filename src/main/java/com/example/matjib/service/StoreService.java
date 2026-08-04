@@ -29,7 +29,6 @@ public class StoreService {
         return store;
     }
 
-    // 가게 목록 (이름 검색 + 지역 필터 + 페이징)
     public PageResponse<StoreListItem> getStores(StoreSearch search) {
         List<StoreListItem> content = storeMapper.findStores(search);
         long total = storeMapper.countStores(search);
@@ -41,7 +40,6 @@ public class StoreService {
         return storeMapper.findBestStores(region, 4.0, 3);
     }
 
-    // 가게 대표사진 등록 (관리자)
     public void updateImage(Long storeId, String imagePath) {
         storeMapper.updateImage(storeId, imagePath);
     }

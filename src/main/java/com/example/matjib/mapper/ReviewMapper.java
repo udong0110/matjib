@@ -12,11 +12,11 @@ public interface ReviewMapper {
     List<ReviewResponse> findReviews(ReviewSearch search);
     long countReviews(ReviewSearch search);
 
-    ReviewResponse findById(@Param("reviewId") Long reviewId);   // 상세(조인)
-    Review findEntityById(@Param("reviewId") Long reviewId);      // 작성자 검증용
-    List<ReviewResponse> findByStoreId(@Param("storeId") Long storeId);   // 가게별 리뷰
+    ReviewResponse findById(@Param("reviewId") Long reviewId);
+    Review findEntityById(@Param("reviewId") Long reviewId);   // 작성자/삭제 권한 검증은 조인 없는 엔티티로
+    List<ReviewResponse> findByStoreId(@Param("storeId") Long storeId);
     void insert(Review review);
     void update(Review review);
     void delete(@Param("reviewId") Long reviewId);
-    int countByMemberId(@Param("memberId") Long memberId);   // 회원별 리뷰 수
+    int countByMemberId(@Param("memberId") Long memberId);
 }

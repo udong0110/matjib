@@ -27,7 +27,6 @@ public class FileStorageService {
         if (file == null || file.isEmpty()) {
             return null;
         }
-        // 이미지 파일만 허용
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new BusinessException(org.springframework.http.HttpStatus.BAD_REQUEST,
@@ -50,7 +49,7 @@ public class FileStorageService {
             file.transferTo(target.toFile());
             log.info("파일 저장: {}", target);
 
-            return "/uploads/" + savedName;   // 웹 접근 경로
+            return "/uploads/" + savedName;
         } catch (IOException e) {
             log.error("파일 저장 실패", e);
             throw new BusinessException(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,

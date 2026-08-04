@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<!-- ===== 일반 헤더 (로그인/마이페이지) ===== -->
+<!-- mainNav: 홈 제외 전 페이지 공통 헤더. navSimple과 이름이 겹치지 않게 주의 -->
 <nav class="nav" th:fragment="mainNav">
     <div class="right">
         <a th:href="@{/}">홈</a>
@@ -22,7 +22,7 @@
     </div>
 </nav>
 
-<!-- ===== 홈 전용 헤더 (로고 없이 로그인/회원가입만) ===== -->
+<!-- navSimple: 홈 화면 전용 헤더 -->
 <nav class="nav nav-simple" th:fragment="navSimple">
     <div class="right">
         <a sec:authorize="!isAuthenticated()" th:href="@{/login}">로그인</a>

@@ -27,10 +27,9 @@
         VALUES (#{storeName}, #{category}, #{region}, #{address}, #{phone}, #{latitude}, #{longitude})
     </insert>
 
-    <!-- 검색 조건 (동적쿼리) -->
     <sql id="storeCondition">
         <where>
-            AND s.region LIKE '부산%'   <!-- 부산 지역만 -->
+            AND s.region LIKE '부산%'
             <if test="keyword != null and keyword != ''">
                 AND s.store_name LIKE CONCAT('%', #{keyword}, '%')
             </if>
@@ -43,7 +42,6 @@
         </where>
     </sql>
 
-    <!-- 가게 목록: store LEFT JOIN review (리뷰 수 + 평균 별점) + 동적조건 + 페이징 -->
     <select id="findStores" parameterType="com.example.matjib.dto.StoreSearch"
             resultType="com.example.matjib.dto.StoreListItem">
         SELECT s.store_id, s.store_name, s.category, s.region, s.address, s.image_path,
@@ -120,7 +118,6 @@
         LIMIT 1
     </select>
 
-    <!-- 코스가 가능한 지역 목록 (부산 지역만) -->
     <select id="findCourseRegions" resultType="string">
         SELECT DISTINCT region FROM store WHERE region LIKE '부산%' ORDER BY region
     </select>

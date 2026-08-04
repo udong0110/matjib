@@ -22,7 +22,6 @@ public class ReviewService {
     private final PointService pointService;
     private final VisitService visitService;
 
-    // 목록 + 검색 + 페이징
     public PageResponse<ReviewResponse> getReviews(ReviewSearch search) {
         List<ReviewResponse> content = reviewMapper.findReviews(search);
         long total = reviewMapper.countReviews(search);
@@ -31,7 +30,6 @@ public class ReviewService {
         return new PageResponse<>(content, search.getPage(), search.getSize(), total);
     }
 
-    // 상세
     public ReviewResponse getReview(Long reviewId) {
         ReviewResponse review = reviewMapper.findById(reviewId);
         if (review == null) {
@@ -40,7 +38,6 @@ public class ReviewService {
         return review;
     }
 
-    // 가게별 리뷰 목록 (가게 상세 페이지용)
     public List<ReviewResponse> getReviewsByStore(Long storeId) {
         return reviewMapper.findByStoreId(storeId);
     }
@@ -49,7 +46,6 @@ public class ReviewService {
     public Long create(ReviewRequest request, String username, String imagePath) {
         Member writer = memberService.getByUsername(username);
 
-        // 방문 인증한 사람만 리뷰 작성 가능
         if (!visitService.hasVisited(writer.getMemberId(), request.getStoreId())) {
             throw BusinessException.forbidden("방문 인증을 한 가게에만 리뷰를 쓸 수 있습니다.");
         }
@@ -64,7 +60,7 @@ public class ReviewService {
 
         reviewMapper.insert(review);
 
-        // 리뷰 작성 보상: 100P (같은 트랜잭션 → 실패하면 전부 롤백)
+        // 같은 트랜잭션으로 묶어서, 포인트 적립이 실패하면 리뷰 저장도 롤백되게 함
         pointService.earnForReview(writer.getMemberId());
 
         log.info("리뷰 작성: reviewId={}, writer={}", review.getReviewId(), username);

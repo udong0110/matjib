@@ -21,7 +21,6 @@ public class CourseService {
 
     private final StoreMapper storeMapper;
 
-    // 코스 후보로 인정하는 최소 평균 별점
     private static final double MIN_RATING = 3.0;
 
     // 프랜차이즈(체인) 추정 이름 패턴 — 이 이름이 들어가면 로컬이 아니라고 보고 후보에서 제외
@@ -36,7 +35,7 @@ public class CourseService {
 
     @Getter
     public static class CourseStop {
-        private final String slot;      // 아침/점심/저녁
+        private final String slot;
         private final StoreListItem store;
         private String distanceLabel;   // 아침 가게 기준 거리 ("+1.2km"), 아침은 "출발"
 
@@ -54,11 +53,8 @@ public class CourseService {
         List<CourseStop> course = new ArrayList<>();
         List<Long> picked = new ArrayList<>();
 
-        // 아침 = 카페 → 없으면 일반 식당 → 그래도 없으면 아무 가게
         addStopWithFallback(course, picked, region, "아침", CAFE);
-        // 점심 = 일반 식당(카페 제외) → 없으면 아무 가게
         addStopWithFallback(course, picked, region, "점심", MEAL_ONLY);
-        // 저녁 = 일반 식당(카페 제외) → 없으면 아무 가게
         addStopWithFallback(course, picked, region, "저녁", MEAL_ONLY);
 
         applyDistances(course);

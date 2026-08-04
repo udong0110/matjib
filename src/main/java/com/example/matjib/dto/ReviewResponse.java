@@ -20,11 +20,9 @@ public class ReviewResponse {
     private String imagePath;
     private LocalDateTime createdAt;
 
-    // member 조인
     private Long memberId;
     private String writerNickname;
 
-    // store 조인
     private Long storeId;
     private String storeName;
     private String category;

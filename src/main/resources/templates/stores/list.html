@@ -11,7 +11,6 @@
     <p class="page-subtitle">부산의 찐 로컬 맛집 <span th:text="${page.totalCount}">0</span>곳</p>
 
     <div class="layout">
-        <!-- 왼쪽 필터 -->
         <aside class="filters">
             <h3>지역</h3>
             <div class="filter-links">
@@ -34,7 +33,6 @@
             </div>
         </aside>
 
-        <!-- 오른쪽 가게 목록 -->
         <main>
             <div class="result-head">
                 <span class="result-count" th:text="${page.totalCount} + '개의 맛집'">0개의 맛집</span>
@@ -77,7 +75,6 @@
                 <p>다른 지역이나 검색어로 찾아보세요.</p>
             </div>
 
-            <!-- 페이징 -->
             <div class="pagination" th:if="${page.totalPages > 0}">
                 <a th:href="@{/stores(keyword=${search.keyword},region=${search.region},category=${search.category},page=${page.page - 1})}"
                    th:classappend="${page.page <= 1} ? 'disabled'">‹</a>
