@@ -19,12 +19,11 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * 앱 시작 시 카카오 로컬 API로 실제 가게 데이터를 수집해 store 테이블에 저장한다.
- * application.yml 의 kakao.seed-enabled=true 일 때만 동작.
+ * 앱 시작 시 카카오 로컬 API로 가게 데이터를 긁어와서 store 테이블에 저장.
+ * application.yml의 kakao.seed-enabled=true일 때만 동작함.
  *
- * ★ 핵심: API는 "초기 데이터 채우기"용으로만 쓰고,
- *   실제 서비스 조회는 전부 우리 DB(store 테이블)에서 MyBatis로 수행한다.
- *   → 과제 요구사항(Join + 동적쿼리)이 그대로 유지됨.
+ * API는 초기 데이터 채우는 용도로만 쓰고, 실제 조회는 전부 DB에서 MyBatis로 처리한다
+ * (과제 요구사항인 Join/동적쿼리를 유지하기 위함).
  */
 @Slf4j
 @Component
@@ -42,8 +41,7 @@ public class StoreDataSeeder implements ApplicationRunner {
 
     private static final String KAKAO_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
 
-    // 수집할 검색 키워드 (부산 지역별 + 로컬 맛집 위주)
-    // 구체적인 지역/메뉴 키워드를 많이 넣을수록 체인점보다 로컬 가게가 많이 수집됨
+    // 검색 키워드 목록. 지역/메뉴명을 구체적으로 넣을수록 체인점 대신 로컬 가게가 많이 잡힘
     private static final List<String> KEYWORDS = List.of(
             // 지역 대표 맛집
             "해운대 맛집", "서면 맛집", "광안리 맛집", "남포동 맛집", "전포동 맛집",
@@ -62,7 +60,7 @@ public class StoreDataSeeder implements ApplicationRunner {
             log.info("[StoreSeeder] kakao.seed-enabled=false → API 시딩 건너뜀");
             return;
         }
-        // 이미 가게 데이터가 충분히 있으면 재수집하지 않음 (재시작 시 중복 호출 방지)
+        // 재시작할 때마다 다시 긁어오지 않게, 데이터 있으면 스킵
         if (storeMapper.findAll().size() >= 20) {
             log.info("[StoreSeeder] 가게 데이터가 이미 있어 시딩 건너뜀 ({}건)", storeMapper.findAll().size());
             return;
@@ -73,7 +71,7 @@ public class StoreDataSeeder implements ApplicationRunner {
             try {
                 saved += fetchAndSave(keyword);
             } catch (Exception e) {
-                // API 실패해도 앱은 계속 뜬다 (한 키워드 실패가 전체를 막지 않도록)
+                // 한 키워드가 실패해도 나머지는 계속 진행
                 log.warn("[StoreSeeder] '{}' 수집 실패: {}", keyword, e.getMessage());
             }
         }

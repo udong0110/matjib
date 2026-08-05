@@ -7,9 +7,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Paths;
 
-/**
- * 로컬 uploads 폴더에 저장된 리뷰 사진을 브라우저에서 /uploads/파일명 으로 볼 수 있게 매핑.
- */
+// uploads 폴더에 저장된 리뷰 사진을 /uploads/파일명 으로 접근 가능하게 매핑
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 

@@ -35,7 +35,7 @@ public class KakaoPlaceResponse {
         private String addressName;
 
         private String phone;
-        private String x;                   // 경도(longitude) — 카카오 API는 x/y 순, 위경도 아님
-        private String y;                   // 위도(latitude)
+        private String x;                   // 경도. 카카오는 위경도 아니고 x/y 순으로 줌
+        private String y;                   // 위도
     }
 }

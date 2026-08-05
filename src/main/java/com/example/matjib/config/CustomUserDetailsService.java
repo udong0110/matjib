@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (member == null) {
             throw new UsernameNotFoundException("존재하지 않는 사용자입니다: " + username);
         }
-        // role: "ROLE_USER" -> Security 는 SimpleGrantedAuthority 로 그대로 사용
+        // member.role("ROLE_USER")을 그대로 SimpleGrantedAuthority로 씀
         return new User(
                 member.getUsername(),
                 member.getPassword(),

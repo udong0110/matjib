@@ -35,7 +35,7 @@ public class PageController {
     @org.springframework.beans.factory.annotation.Value("${kakao.js-key:}")
     private String kakaoJsKey;
 
-    // 부산 16개 구/군 전체 (실제 데이터 유무와 무관하게 필터에 항상 노출)
+    // 부산 16개 구/군, 데이터 없어도 필터엔 항상 다 보여줌
     private static final List<String> REGIONS = List.of(
             "부산 중구", "부산 서구", "부산 동구", "부산 영도구", "부산 부산진구",
             "부산 동래구", "부산 남구", "부산 북구", "부산 해운대구", "부산 사하구",

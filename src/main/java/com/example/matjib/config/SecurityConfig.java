@@ -32,8 +32,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login")                     // GET: 로그인 화면
-                .loginProcessingUrl("/login")            // POST: 로그인 처리 — 같은 경로를 메서드로 구분
+                .loginPage("/login")                     // GET, 로그인 화면
+                .loginProcessingUrl("/login")            // POST, 같은 경로인데 메서드로 구분됨
                 .usernameParameter("username")
                 .passwordParameter("password")
                 .defaultSuccessUrl("/stores", true)

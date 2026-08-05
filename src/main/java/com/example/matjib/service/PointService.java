@@ -24,9 +24,8 @@ public class PointService {
     public static final int REFUND_UNIT = 3000;      // 3000점 = 3000원 (1:1)
 
     /**
-     * 리뷰 작성 시 포인트 적립.
-     * 회원 포인트 +100 과 내역 기록을 한 트랜잭션으로 묶는다.
-     * (ReviewService.create 안에서 호출되어 리뷰 저장과 함께 롤백/커밋된다)
+     * 리뷰 작성 시 포인트 적립. 포인트 +100, 내역 기록까지 한 트랜잭션.
+     * ReviewService.create에서 호출되고, 리뷰 저장이랑 같이 롤백/커밋된다.
      */
     @Transactional
     public void earnForReview(Long memberId) {
@@ -45,9 +44,8 @@ public class PointService {
     }
 
     /**
-     * 포인트 환급 신청.
-     * 3000점 이상 보유 시에만 가능하며, 3000점을 차감하고 환급 내역을 남긴다.
-     * (실제 송금은 관리자가 환급 내역을 보고 처리하는 개념)
+     * 포인트 환급 신청. 3000점 이상 있어야 하고, 3000점 차감 후 내역만 남긴다.
+     * 실제 송금은 이 내역 보고 관리자가 처리.
      */
     @Transactional
     public void refund(Long memberId) {
