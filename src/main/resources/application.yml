@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:classpath:application-secret.yml   # 로컬 전용 키 파일 (git에는 안 올라감)
   application:
     name: matjib-review
   servlet:
@@ -22,10 +24,11 @@ mybatis:
     map-underscore-to-camel-case: true   # store_name -> storeName 자동 매핑
 
 # 카카오 로컬 API (부산 가게 데이터 시딩용)
+# 실제 키는 application-secret.yml 에 넣기 (커밋 안 됨, 없으면 빈 값으로 동작)
 kakao:
-  api-key: REDACTED_KAKAO_API_KEY   # ← 카카오 디벨로퍼스 REST API 키로 교체
+  api-key: ""
   seed-enabled: true                  # 앱 시작 시 부산 가게 데이터 수집 (한 번 채워지면 false 로 꺼도 됨)
-  js-key: REDACTED_KAKAO_JS_KEY   # ← 지도 표시용 JavaScript 키 (없으면 지도 대신 안내 문구)
+  js-key: ""                          # 없으면 지도 대신 안내 문구
 
 # 파일 업로드 (리뷰 사진 로컬 저장)
 file:
