@@ -9,7 +9,19 @@
       "Bash(curl -s http://localhost:8080/login)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(./gradlew compileJava compileTestJava --console=plain)",
+      "Bash(./gradlew processResources --console=plain)",
+      "Bash(curl -s http://localhost:8080/css/style.css)",
+      "Bash(curl -s \"http://localhost:8080/?region=%EB%B6%80%EC%82%B0%20%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC\" -o /tmp/home.html)",
+      "Bash(curl -s -G \"http://localhost:8080/stores\" --data-urlencode \"region=부산 해운대구\" --data-urlencode \"category=카페\")",
+      "Bash(git checkout *)",
+      "Bash(./gradlew compileJava -q)",
+      "Bash(git commit *)",
+      "Bash(git stash *)"
+
+
+
     ]
   }
 }
