@@ -15,13 +15,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 
-// 두 가게 사이 도보 거리/시간 조회 (카카오맵 도보 경로 조회 API)
-// API 실패하거나 키가 없으면 직선거리 + 도보 속도(4km/h)로 대충 계산해서 대체
+// 두 가게 사이 도보/대중교통 이동 정보 조회 (카카오맵 경로 조회 API)
+// 도보는 API 실패해도 직선거리+속도로 대체해서 항상 값을 주고, 대중교통은 실패하면 그냥 null (화면에서 도보만 표시)
 @Slf4j
 @Service
-public class WalkRouteService {
+public class RouteService {
 
     private static final String WALK_URL = "https://dapi.kakao.com/v2/routing/walk";
+    private static final String TRANSIT_URL = "https://dapi.kakao.com/v2/routing/publictraffic";
     private static final double WALK_SPEED_KMH = 4.0;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -31,25 +32,58 @@ public class WalkRouteService {
     private String kakaoApiKey;
 
     public record WalkInfo(double km, int minutes) {}
+    public record TransitInfo(int minutes) {}
 
     public WalkInfo getWalkInfo(StoreListItem from, StoreListItem to) {
         Double straightKm = straightLineKm(from, to);
         if (straightKm == null) {
             return null;
         }
-        if (kakaoApiKey == null || kakaoApiKey.isBlank()) {
-            return fallback(straightKm);
+        if (!hasApiKey()) {
+            return fallbackWalk(straightKm);
         }
         try {
-            return callWalkApi(from, to, straightKm);
+            JsonNode root = requestRoute(WALK_URL, from, to);
+            if (!"OK".equals(root.path("status").asText())) {
+                return fallbackWalk(straightKm);
+            }
+            JsonNode props = root.path("route").path("properties");
+            double km = props.path("totalDistance").asInt() / 1000.0;
+            int minutes = Math.max(1, (int) Math.round(props.path("totalTime").asInt() / 60.0));
+            return new WalkInfo(km, minutes);
         } catch (Exception e) {
             log.warn("도보 경로 조회 실패, 직선거리로 대체: {}", e.getMessage());
-            return fallback(straightKm);
+            return fallbackWalk(straightKm);
         }
     }
 
-    private WalkInfo callWalkApi(StoreListItem from, StoreListItem to, double straightKm) {
-        URI uri = UriComponentsBuilder.fromHttpUrl(WALK_URL)
+    // 버스/지하철 경로 중 제일 빠른 걸로 소요시간만 반환. 경로 없거나 실패하면 null
+    public TransitInfo getTransitInfo(StoreListItem from, StoreListItem to) {
+        if (from.getLatitude() == null || from.getLongitude() == null
+                || to.getLatitude() == null || to.getLongitude() == null || !hasApiKey()) {
+            return null;
+        }
+        try {
+            JsonNode root = requestRoute(TRANSIT_URL, from, to);
+            if (!"OK".equals(root.path("status").asText())) {
+                return null;
+            }
+            int fastestSec = Integer.MAX_VALUE;
+            for (JsonNode route : root.path("routes")) {
+                fastestSec = Math.min(fastestSec, route.path("properties").path("totalTime").asInt(Integer.MAX_VALUE));
+            }
+            if (fastestSec == Integer.MAX_VALUE) {
+                return null;
+            }
+            return new TransitInfo(Math.max(1, (int) Math.round(fastestSec / 60.0)));
+        } catch (Exception e) {
+            log.warn("대중교통 경로 조회 실패: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private JsonNode requestRoute(String url, StoreListItem from, StoreListItem to) throws Exception {
+        URI uri = UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("start_x", from.getLongitude())
                 .queryParam("start_y", from.getLatitude())
                 .queryParam("end_x", to.getLongitude())
@@ -63,25 +97,14 @@ public class WalkRouteService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        JsonNode root = readTree(response.getBody());
-        if (!"OK".equals(root.path("status").asText())) {
-            return fallback(straightKm);
-        }
-        JsonNode props = root.path("route").path("properties");
-        double km = props.path("totalDistance").asInt() / 1000.0;
-        int minutes = Math.max(1, (int) Math.round(props.path("totalTime").asInt() / 60.0));
-        return new WalkInfo(km, minutes);
+        return objectMapper.readTree(response.getBody());
     }
 
-    private JsonNode readTree(String body) {
-        try {
-            return objectMapper.readTree(body);
-        } catch (Exception e) {
-            throw new IllegalStateException("도보 경로 응답 파싱 실패", e);
-        }
+    private boolean hasApiKey() {
+        return kakaoApiKey != null && !kakaoApiKey.isBlank();
     }
 
-    private WalkInfo fallback(double straightKm) {
+    private WalkInfo fallbackWalk(double straightKm) {
         int minutes = Math.max(1, (int) Math.round(straightKm / WALK_SPEED_KMH * 60));
         return new WalkInfo(straightKm, minutes);
     }

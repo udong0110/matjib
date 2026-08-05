@@ -19,7 +19,7 @@ import java.util.List;
 public class CourseService {
 
     private final StoreMapper storeMapper;
-    private final WalkRouteService walkRouteService;
+    private final RouteService routeService;
 
     private static final double MIN_RATING = 3.0;
 
@@ -30,7 +30,7 @@ public class CourseService {
     public static class CourseStop {
         private final String slot;
         private final StoreListItem store;
-        private String distanceLabel;   // "1.2km · 도보 18분" 식으로 표시, 아침은 "출발"
+        private String distanceLabel;   // "1.2km · 도보 18분 / 버스 12분" 식으로 표시, 아침은 "출발"
 
         public CourseStop(String slot, StoreListItem store) {
             this.slot = slot; this.store = store;
@@ -86,7 +86,7 @@ public class CourseService {
         }
     }
 
-    // 앞 스탑 → 다음 스탑 구간별로 도보 거리/시간 계산 (아침은 시작점이라 "출발"만 표시)
+    // 앞 스탑 → 다음 스탑 구간별로 도보/버스 거리·시간 계산 (아침은 시작점이라 "출발"만 표시)
     private void applyDistances(List<CourseStop> course) {
         for (int i = 0; i < course.size(); i++) {
             CourseStop stop = course.get(i);
@@ -95,9 +95,18 @@ public class CourseService {
                 continue;
             }
             StoreListItem prev = course.get(i - 1).getStore();
-            WalkRouteService.WalkInfo info = walkRouteService.getWalkInfo(prev, stop.getStore());
-            stop.setDistanceLabel(info == null ? null
-                    : String.format("%.1fkm · 도보 %d분", info.km(), info.minutes()));
+            StoreListItem curr = stop.getStore();
+            RouteService.WalkInfo walk = routeService.getWalkInfo(prev, curr);
+            if (walk == null) {
+                stop.setDistanceLabel(null);
+                continue;
+            }
+            String label = String.format("%.1fkm · 도보 %d분", walk.km(), walk.minutes());
+            RouteService.TransitInfo transit = routeService.getTransitInfo(prev, curr);
+            if (transit != null) {
+                label += String.format(" / 버스 %d분", transit.minutes());
+            }
+            stop.setDistanceLabel(label);
         }
     }
 }
