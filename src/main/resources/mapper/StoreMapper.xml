@@ -57,7 +57,7 @@
         LIMIT #{offset}, #{size}
     </select>
 
-    <!-- 지역 맛집 BEST: 프랜차이즈 빼고 별점 minRating 이상 중 리뷰 많은 순 -->
+    <!-- 지역 맛집 BEST: 프랜차이즈 빼고 별점 minRating 이상 중 평균 별점 높은 순 -->
     <select id="findBestStores" resultType="com.example.matjib.dto.StoreListItem">
         SELECT s.store_id, s.store_name, s.category, s.region, s.address, s.image_path,
                ROUND(AVG(r.rating), 1) AS avg_rating,
@@ -72,7 +72,7 @@
         </if>
         GROUP BY s.store_id, s.store_name, s.category, s.region, s.address, s.image_path
         HAVING AVG(r.rating) >= #{minRating}
-        ORDER BY review_count DESC, avg_rating DESC, s.store_id
+        ORDER BY avg_rating DESC, review_count DESC, s.store_id
         LIMIT #{limit}
     </select>
 

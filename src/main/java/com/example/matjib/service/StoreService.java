@@ -36,7 +36,7 @@ public class StoreService {
         return new PageResponse<>(content, search.getPage(), search.getSize(), total);
     }
 
-    // 지역 맛집 BEST 3곳 (별점 4.0 이상 중 리뷰 많은 순, 프랜차이즈 제외)
+    // 지역 맛집 BEST 3곳 (별점 4.0 이상 중 평균 별점 높은 순, 프랜차이즈 제외)
     public List<StoreListItem> getBestStores(String region) {
         return storeMapper.findBestStores(region, 4.0, 3, StoreMapper.FRANCHISE_PATTERN);
     }

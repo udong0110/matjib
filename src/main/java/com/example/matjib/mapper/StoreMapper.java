@@ -25,7 +25,7 @@ public interface StoreMapper {
     long countStores(StoreSearch search);
     void updateImage(@Param("storeId") Long storeId, @Param("imagePath") String imagePath);
 
-    // 별점 4.0 이상 중 리뷰 많은 순, 프랜차이즈 제외
+    // 별점 4.0 이상 중 평균 별점 높은 순, 프랜차이즈 제외
     List<StoreListItem> findBestStores(@Param("region") String region,
                                        @Param("minRating") double minRating,
                                        @Param("limit") int limit,
