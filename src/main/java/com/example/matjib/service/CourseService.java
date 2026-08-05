@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 지역별 코스 추천 (아침 카페 + 점심/저녁 식사 각 1곳).
+ * 지역별 코스 추천 (아침/점심은 카페+식사류 중 랜덤 1곳, 저녁은 식사류만 1곳).
  * 맨날 같은 맛집만 뜨지 않도록 별점 3점대 후보 중 랜덤으로 뽑고, 프랜차이즈는 최대한 제외한다.
  */
 @Service
@@ -19,17 +19,18 @@ import java.util.List;
 public class CourseService {
 
     private final StoreMapper storeMapper;
+    private final WalkRouteService walkRouteService;
 
     private static final double MIN_RATING = 3.0;
 
     private static final List<String> MEAL_ONLY = List.of("한식", "양식", "일식", "중식");
-    private static final List<String> CAFE = List.of("카페");
+    private static final List<String> CAFE_OR_MEAL = List.of("카페", "한식", "양식", "일식", "중식");
 
     @Getter
     public static class CourseStop {
         private final String slot;
         private final StoreListItem store;
-        private String distanceLabel;   // "+1.2km" 식으로 표시, 아침은 "출발"
+        private String distanceLabel;   // "1.2km · 도보 18분" 식으로 표시, 아침은 "출발"
 
         public CourseStop(String slot, StoreListItem store) {
             this.slot = slot; this.store = store;
@@ -48,8 +49,8 @@ public class CourseService {
         // hashCode가 음수일 수 있어서 abs 처리
         long seed = Math.abs(LocalDate.now().toEpochDay() * 31 + region.hashCode());
 
-        addStopWithFallback(course, picked, region, "아침", CAFE, seed);
-        addStopWithFallback(course, picked, region, "점심", MEAL_ONLY, seed);
+        addStopWithFallback(course, picked, region, "아침", CAFE_OR_MEAL, seed);
+        addStopWithFallback(course, picked, region, "점심", CAFE_OR_MEAL, seed);
         addStopWithFallback(course, picked, region, "저녁", MEAL_ONLY, seed);
 
         applyDistances(course);
@@ -85,31 +86,18 @@ public class CourseService {
         }
     }
 
-    /** 아침 가게 기준으로 나머지 스탑 거리 계산 */
+    // 앞 스탑 → 다음 스탑 구간별로 도보 거리/시간 계산 (아침은 시작점이라 "출발"만 표시)
     private void applyDistances(List<CourseStop> course) {
-        if (course.isEmpty()) return;
-        StoreListItem base = course.get(0).getStore();
         for (int i = 0; i < course.size(); i++) {
             CourseStop stop = course.get(i);
             if (i == 0) {
                 stop.setDistanceLabel("출발");
                 continue;
             }
-            Double d = distanceKm(base, stop.getStore());
-            stop.setDistanceLabel(d == null ? null : String.format("+%.1fkm", d));
+            StoreListItem prev = course.get(i - 1).getStore();
+            WalkRouteService.WalkInfo info = walkRouteService.getWalkInfo(prev, stop.getStore());
+            stop.setDistanceLabel(info == null ? null
+                    : String.format("%.1fkm · 도보 %d분", info.km(), info.minutes()));
         }
-    }
-
-    /** 하버사인 공식으로 두 지점 사이 거리(km) 계산 */
-    private Double distanceKm(StoreListItem a, StoreListItem b) {
-        if (a.getLatitude() == null || a.getLongitude() == null
-                || b.getLatitude() == null || b.getLongitude() == null) return null;
-        double R = 6371.0;
-        double dLat = Math.toRadians(b.getLatitude() - a.getLatitude());
-        double dLon = Math.toRadians(b.getLongitude() - a.getLongitude());
-        double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(a.getLatitude())) * Math.cos(Math.toRadians(b.getLatitude()))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
     }
 }
