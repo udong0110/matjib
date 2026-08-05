@@ -57,7 +57,7 @@
         LIMIT #{offset}, #{size}
     </select>
 
-    <!-- 지역 맛집 BEST: 별점 minRating 이상인 가게 중 리뷰 많은 순 → 별점 높은 순 상위 N -->
+    <!-- 지역 맛집 BEST: 프랜차이즈 빼고 별점 minRating 이상 중 리뷰 많은 순 -->
     <select id="findBestStores" resultType="com.example.matjib.dto.StoreListItem">
         SELECT s.store_id, s.store_name, s.category, s.region, s.address, s.image_path,
                ROUND(AVG(r.rating), 1) AS avg_rating,
@@ -67,6 +67,9 @@
         FROM store s
         JOIN review r ON s.store_id = r.store_id
         WHERE s.region = #{region}
+        <if test="franchisePattern != null">
+            AND s.store_name NOT REGEXP #{franchisePattern}
+        </if>
         GROUP BY s.store_id, s.store_name, s.category, s.region, s.address, s.image_path
         HAVING AVG(r.rating) >= #{minRating}
         ORDER BY review_count DESC, avg_rating DESC, s.store_id

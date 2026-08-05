@@ -22,13 +22,6 @@ public class CourseService {
 
     private static final double MIN_RATING = 3.0;
 
-    // 프랜차이즈 이름 패턴, 후보에서 제외할 때 씀
-    private static final String FRANCHISE_PATTERN =
-            "스타벅스|투썸|이디야|메가|빽다방|컴포즈|커피빈|폴바셋|엔제리너스|" +
-            "맥도날드|롯데리아|버거킹|맘스터치|KFC|서브웨이|" +
-            "본죽|김밥천국|한솥|명랑|BBQ|BHC|교촌|굽네|네네|처갓집|페리카나|" +
-            "파리바게뜨|뚜레쥬르|배스킨|던킨";
-
     private static final List<String> MEAL_ONLY = List.of("한식", "양식", "일식", "중식");
     private static final List<String> CAFE = List.of("카페");
 
@@ -73,14 +66,14 @@ public class CourseService {
     private void addStopWithFallback(List<CourseStop> course, List<Long> picked,
                                      String region, String slot, List<String> categories, long seed) {
         StoreListItem store = storeMapper.findCourseStore(
-                region, categories, picked, FRANCHISE_PATTERN, MIN_RATING, seed);
+                region, categories, picked, StoreMapper.FRANCHISE_PATTERN, MIN_RATING, seed);
         if (store == null) {
             store = storeMapper.findCourseStore(
-                    region, categories, picked, FRANCHISE_PATTERN, null, seed);
+                    region, categories, picked, StoreMapper.FRANCHISE_PATTERN, null, seed);
         }
         if (store == null) {
             store = storeMapper.findCourseStore(
-                    region, null, picked, FRANCHISE_PATTERN, null, seed);
+                    region, null, picked, StoreMapper.FRANCHISE_PATTERN, null, seed);
         }
         if (store == null) {
             store = storeMapper.findCourseStore(
