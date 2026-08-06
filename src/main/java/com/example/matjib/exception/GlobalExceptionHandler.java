@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "입력값이 올바르지 않습니다.", fieldErrors));
     }
 
-    // favicon.ico 등 브라우저가 자동 요청하는 정적 리소스 404는 에러가 아니므로 조용히 404만 반환
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Void> handleNoResource() {
         return ResponseEntity.notFound().build();
