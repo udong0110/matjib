@@ -37,7 +37,7 @@
             <form th:action="@{/stores}" method="get" style="display:flex;gap:10px;margin-bottom:20px">
                 <input type="hidden" name="region" th:value="${search.region}"/>
                 <input type="hidden" name="category" th:value="${search.category}"/>
-                <input type="text" name="keyword" th:value="${search.keyword}" placeholder="가게 이름으로 검색"
+                <input type="text" name="keyword" th:value="${search.keyword}" placeholder="가게 이름 및 카테고리로 검색"
                        style="flex:1;padding:12px 16px;border:1px solid var(--line);border-radius:3px;font-size:15px;outline:none"/>
                 <button type="submit" class="btn-login">검색</button>
             </form>
